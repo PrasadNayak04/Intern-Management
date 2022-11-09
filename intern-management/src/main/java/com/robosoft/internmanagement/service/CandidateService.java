@@ -1,7 +1,6 @@
 package com.robosoft.internmanagement.service;
 
-import com.robosoft.internmanagement.modelAttribute.CandidateProfile;
-import com.robosoft.internmanagement.modelAttribute.MemberProfile;
+import com.robosoft.internmanagement.modelAttributes.MemberProfile;
 import com.robosoft.internmanagement.service.JwtSecurity.BeanStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -22,10 +21,6 @@ public class CandidateService {
     private StorageService storageService;
 
     String query;
-
-    public String candidateRegister(CandidateProfile candidateProfile, HttpServletRequest request){
-        return "";
-    }
 
     public String registerMember(MemberProfile memberProfile, HttpServletRequest request){
         memberProfile.setPassword(encodePassword(memberProfile.getPassword()));
