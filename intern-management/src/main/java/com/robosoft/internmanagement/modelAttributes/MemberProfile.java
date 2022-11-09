@@ -1,19 +1,19 @@
-package com.robosoft.internmanagement.modelAttributes;
+package com.robosoft.internmanagement.modelAttribute;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.RequestParam;
+import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
-@AllArgsConstructor
-@RequiredArgsConstructor
-public class MemberProfile
-{
+@NoArgsConstructor
+public class MemberProfile {
+
     private String name;
     private String emailId;
-    private String photoUrl;
-    private Long mobileNumber;
+    private long mobileNumber;
+    private MultipartFile photo;
     private String designation;
     private String position;
+    private String password;
+
 }
