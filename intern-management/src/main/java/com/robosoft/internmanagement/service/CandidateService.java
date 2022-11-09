@@ -9,6 +9,6 @@ import javax.servlet.http.HttpServletRequest;
 public class CandidateService {
 
     public String candidateRegister(CandidateProfile candidateProfile, HttpServletRequest request){
-
+        return "";
     }
 }
