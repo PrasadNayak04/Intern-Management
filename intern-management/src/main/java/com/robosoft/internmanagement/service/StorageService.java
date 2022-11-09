@@ -23,7 +23,7 @@ public class StorageService {
     private final Path root = Paths.get("src\\main\\resources\\static\\documents\\");
 
     public String singleFileUpload(MultipartFile file, String email, HttpServletRequest request) {
-
+        String fileUrl = null;
         if (file.isEmpty()) {
             return "file is empty";
         }
@@ -37,7 +37,7 @@ public class StorageService {
             String contentType = getContentType(request, resource);
             System.out.println(path);
             Files.write(path, bytes);
-            generateDocumentUrl(email + file.getOriginalFilename());
+            fileUrl = generateDocumentUrl(email + file.getOriginalFilename());
             System.out.println(generateDocumentUrl(email + file.getOriginalFilename()));
             
 
@@ -45,7 +45,7 @@ public class StorageService {
             e.printStackTrace();
         }
 
-        return "file saved";
+        return fileUrl;
     }
 
     public String generateDocumentUrl(String fileName){
