@@ -25,8 +25,11 @@ public class CandidateController {
     private StorageService storageService;
 
     @PostMapping("/upload")
-    public String singleFileUpload(@RequestParam MultipartFile file, @RequestParam String email, HttpServletRequest request) {
-        return storageService.singleFileUpload(file, email, request);
+    public String singleFileUpload(@RequestParam MultipartFile file, @RequestParam String email, HttpServletRequest request) throws Exception {
+        if(storageService.singleFileUpload(file, email, request)) {
+            return "Success";
+        }
+        return "Denied !";
     }
 
 

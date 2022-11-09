@@ -22,10 +22,10 @@ public class StorageService {
 
     private final Path root = Paths.get("src\\main\\resources\\static\\documents\\");
 
-    public String singleFileUpload(MultipartFile file, String email, HttpServletRequest request) {
+    public Boolean singleFileUpload(MultipartFile file, String email, HttpServletRequest request) throws Exception {
 
         if (file.isEmpty()) {
-            return "file is empty";
+            return false;
         }
 
         try {
@@ -42,10 +42,10 @@ public class StorageService {
             
 
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new Exception();
         }
 
-        return "file saved";
+        return true;
     }
 
     public String generateDocumentUrl(String fileName){
@@ -53,23 +53,6 @@ public class StorageService {
         return apiUrl + fileName;
     }
 
-    public Resource load(String filename) {
-
-        System.out.println("src\\main\\resources\\static\\documents\\".length());
-        //String file;
-        try {
-            Path file = root.resolve(filename);
-            Resource resource = new UrlResource(file.toUri());
-
-            if (resource.exists() || resource.isReadable()) {
-                return resource;
-            } else {
-                throw new RuntimeException("Could not read the file!");
-            }
-        } catch (MalformedURLException e) {
-            throw new RuntimeException("Error: " + e.getMessage());
-        }
-    }
 
     public String getContentType(HttpServletRequest request, Resource resource){
         String contentType = null;
