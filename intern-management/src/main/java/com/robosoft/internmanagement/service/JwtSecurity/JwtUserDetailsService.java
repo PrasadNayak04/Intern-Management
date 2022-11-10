@@ -23,9 +23,10 @@ public class JwtUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String memberEmail) throws UsernameNotFoundException {
         try {
             Member member = Optional.of(memberService.getMemberByEmail(memberEmail)).orElse(null);
-            return new org.springframework.security.core.userdetails.User(member.getEmail(), member.getPassword(),
+            return new org.springframework.security.core.userdetails.User(member.getEmailId(), member.getPassword(),
                     new ArrayList<>());
-        } catch (UsernameNotFoundException e){
+        }
+        catch (UsernameNotFoundException e){
             throw new UsernameNotFoundException("User not found with username: " + memberEmail);
         }
     }
