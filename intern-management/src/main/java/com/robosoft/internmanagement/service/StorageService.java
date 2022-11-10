@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.channels.MulticastChannel;
@@ -29,16 +30,20 @@ public class StorageService {
         }
 
         try {
-
+            File newDirectory = new File(UPLOADED_FOLDER, email);
+            if(!(newDirectory.exists())){
+                newDirectory.mkdir();
+            }
+            String CREATED_FOLDER = UPLOADED_FOLDER + email + "\\";
             // Get the file and save it somewhere
             byte[] bytes = file.getBytes();
-            Path path = Paths.get(UPLOADED_FOLDER + email + file.getOriginalFilename());
+            Path path = Paths.get(CREATED_FOLDER  + file.getOriginalFilename());
             Resource resource = new UrlResource(path.toUri());
             String contentType = getContentType(request, resource);
             System.out.println(path);
             Files.write(path, bytes);
-            fileUrl = generateDocumentUrl(email + file.getOriginalFilename());
-            System.out.println(generateDocumentUrl(email + file.getOriginalFilename()));
+            fileUrl = generateDocumentUrl(email + "/" + file.getOriginalFilename());
+            System.out.println(fileUrl);
             
 
         } catch (IOException e) {

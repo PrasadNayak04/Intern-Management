@@ -1,4 +1,4 @@
-package com.robosoft.internmanagement.modelAttribute;
+package com.robosoft.internmanagement.modelAttributes;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
