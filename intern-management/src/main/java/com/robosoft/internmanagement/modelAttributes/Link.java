@@ -1,10 +1,10 @@
 package com.robosoft.internmanagement.modelAttributes;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
-@NoArgsConstructor
+@AllArgsConstructor
+@RequiredArgsConstructor
 public class Link {
 
     private String url;
