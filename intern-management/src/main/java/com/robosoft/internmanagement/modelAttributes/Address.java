@@ -4,10 +4,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
+@AllArgsConstructor
+@RequiredArgsConstructor
 public class Address {
 
     private String content;
     private String state;
     private long pinCode;
+    
 }
