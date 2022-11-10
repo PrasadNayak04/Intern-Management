@@ -31,8 +31,8 @@ public class CandidateProfile {
     private String skills;
     private String about;
     private List<Link> links;
-    private int currentCTC;
-    private int expectedCTC;
+    private double currentCTC;
+    private double expectedCTC;
     private MultipartFile attachment;
     private MultipartFile photo;
 
