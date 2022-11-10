@@ -1,12 +1,7 @@
-package com.robosoft.internmanagement.modelAttribute;
+package com.robosoft.internmanagement.modelAttributes;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-
+import lombok.*;
 import java.sql.Date;
-
 
 @Data
 @AllArgsConstructor
@@ -17,7 +12,6 @@ public class WorkHistory {
     private String position;
     private Date fromDate;
     private Date toDate;
-    private Date date;
     private String location;
 
 }

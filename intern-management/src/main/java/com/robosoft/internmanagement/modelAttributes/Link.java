@@ -1,17 +1,12 @@
-package com.robosoft.internmanagement.modelAttribute;
+package com.robosoft.internmanagement.modelAttributes;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-
-import java.sql.Date;
+import lombok.*;
 
 @Data
 @AllArgsConstructor
 @RequiredArgsConstructor
 public class Link {
-    private Date date;
+
     private String url;
     private String website;
 

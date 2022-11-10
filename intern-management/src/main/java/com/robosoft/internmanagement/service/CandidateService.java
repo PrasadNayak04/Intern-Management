@@ -1,6 +1,6 @@
 package com.robosoft.internmanagement.service;
 
-import com.robosoft.internmanagement.modelAttribute.*;
+import com.robosoft.internmanagement.modelAttributes.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
