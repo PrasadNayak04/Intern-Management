@@ -1,20 +1,21 @@
 package com.robosoft.internmanagement.modelAttributes;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Date;
+import java.sql.Date;
 import java.util.List;
 
 @Data
-@NoArgsConstructor
+@AllArgsConstructor
+@RequiredArgsConstructor
 public class CandidateProfile {
 
     private String name;
     private Date dob;
     private long mobileNumber;
     private String emailId;
+    private Date date;
     private String jobLocation;
     private String gender;
     private String position;
