@@ -6,7 +6,7 @@ import lombok.*;
 @AllArgsConstructor
 @RequiredArgsConstructor
 public class Address {
-    
+
     private String content;
     private String state;
     private long pinCode;
