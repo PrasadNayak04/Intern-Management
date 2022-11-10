@@ -11,8 +11,9 @@ import java.sql.Date;
 @AllArgsConstructor
 @RequiredArgsConstructor
 public class Address {
-    private Date date;
+    
     private String content;
     private String state;
     private long pinCode;
+    
 }
