@@ -1,12 +1,11 @@
 package com.robosoft.internmanagement.modelAttributes;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.util.Date;
+import lombok.*;
+import java.sql.Date;
 
 @Data
-@NoArgsConstructor
+@AllArgsConstructor
+@RequiredArgsConstructor
 public class WorkHistory {
 
     private String company;
