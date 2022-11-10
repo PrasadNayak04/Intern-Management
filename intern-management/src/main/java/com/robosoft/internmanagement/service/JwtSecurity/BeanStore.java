@@ -13,9 +13,4 @@ public class BeanStore {
         return new BCryptPasswordEncoder();
     }
 
-    /*public static String encodePassword(String password){
-        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
-        return bCryptPasswordEncoder.encode(password);
-    }*/
-
 }
