@@ -1,5 +1,7 @@
 package com.robosoft.internmanagement.controller;
 
+import com.robosoft.internmanagement.modelAttribute.CandidateProfile;
+import com.robosoft.internmanagement.service.CandidateService;
 import com.robosoft.internmanagement.service.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -7,11 +9,7 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -19,18 +17,14 @@ import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+@RestController
 public class CandidateController {
 
     @Autowired
     private StorageService storageService;
 
-    @PostMapping("/upload")
-    public String singleFileUpload(@RequestParam MultipartFile file, @RequestParam String email, HttpServletRequest request) throws Exception {
-        if(storageService.singleFileUpload(file, email, request)) {
-            return "Success";
-        }
-        return "Denied !";
-    }
+    @Autowired
+    private CandidateService candidateService;
 
 
     @GetMapping("/fetch/{fileName}")
@@ -50,5 +44,12 @@ public class CandidateController {
         return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
+    }
+
+
+    @PostMapping("/candidate-register")
+    public String candidateRegister(@ModelAttribute CandidateProfile candidateProfile, HttpServletRequest request) throws Exception {
+        System.out.println(candidateProfile);
+        return candidateService.candidateRegister(candidateProfile,request);
     }
 }

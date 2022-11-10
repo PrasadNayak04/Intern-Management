@@ -22,10 +22,10 @@ public class StorageService {
 
     private final Path root = Paths.get("src\\main\\resources\\static\\documents\\");
 
-    public Boolean singleFileUpload(MultipartFile file, String email, HttpServletRequest request) throws Exception {
+    public String singleFileUpload(MultipartFile file, String email, HttpServletRequest request) throws Exception {
 
         if (file.isEmpty()) {
-            return false;
+            return "empty";
         }
 
         try {
@@ -37,15 +37,14 @@ public class StorageService {
             String contentType = getContentType(request, resource);
             System.out.println(path);
             Files.write(path, bytes);
-            generateDocumentUrl(email + file.getOriginalFilename());
-            System.out.println(generateDocumentUrl(email + file.getOriginalFilename()));
+            String url = generateDocumentUrl(email + file.getOriginalFilename());
+//            System.out.println(generateDocumentUrl(email + file.getOriginalFilename()));
+            return url;
             
 
         } catch (IOException e) {
             throw new Exception();
         }
-
-        return true;
     }
 
     public String generateDocumentUrl(String fileName){
