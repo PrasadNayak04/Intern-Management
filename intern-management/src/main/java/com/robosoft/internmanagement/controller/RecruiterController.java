@@ -8,9 +8,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.Date;
 import java.util.List;
 
 @RestController
+@RequestMapping("/intern-management")
 public class RecruiterController
 {
     @Autowired
@@ -67,15 +69,20 @@ public class RecruiterController
     }
 
     @GetMapping("/cv-analysis")
-    public List<CvAnalysis> getCv ()
+    public List<CvAnalysis> getCv (@RequestParam(required = false) Date date)
     {
-        return recruiterService.cvAnalysisPage();
+        return recruiterService.cvAnalysisPage(date);
     }
 
     @GetMapping("/search/{designation}")
     public CvAnalysis search(@PathVariable String designation)
     {
         return recruiterService.searchDesignation(designation);
+    }
+
+    @PostMapping("/update-position-status")
+    public int updatePositionStatus(@RequestParam String designation, @RequestParam String newStatus){
+        return recruiterService.updateStatus(designation, newStatus);
     }
 
 }

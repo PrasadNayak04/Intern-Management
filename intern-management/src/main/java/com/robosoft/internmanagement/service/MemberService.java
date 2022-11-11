@@ -24,6 +24,16 @@ public class MemberService {
     @Autowired
     private StorageService storageService;
 
+    private static String currentUser;
+
+    public static void setCurrentUser(String currentUser) {
+        MemberService.currentUser = currentUser;
+    }
+
+    public static String getCurrentUser() {
+        return currentUser;
+    }
+
     String query;
 
 

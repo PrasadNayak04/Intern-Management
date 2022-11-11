@@ -4,6 +4,7 @@ import com.robosoft.internmanagement.modelAttributes.*;
 import com.robosoft.internmanagement.service.JwtSecurity.JwtUserDetailsService;
 import com.robosoft.internmanagement.service.JwtSecurity.TokenManager;
 import com.robosoft.internmanagement.service.MemberService;
+import com.robosoft.internmanagement.service.RecruiterService;
 import com.robosoft.internmanagement.service.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -38,6 +39,7 @@ public class MemberController {
 
     @Autowired
     private MemberService memberService;
+
     @Autowired
     private AuthenticationManager authenticationManager;
     @Autowired
@@ -55,6 +57,7 @@ public class MemberController {
 
         final UserDetails userDetails = userDetailsService.loadUserByUsername(member.getEmailId());
         final String jwtToken = tokenManager.generateJwtToken(userDetails);
+        MemberService.setCurrentUser(userDetails.getUsername());
         return ResponseEntity.ok(jwtToken); //new JwtResponseModel(jwtToken)
     }
 

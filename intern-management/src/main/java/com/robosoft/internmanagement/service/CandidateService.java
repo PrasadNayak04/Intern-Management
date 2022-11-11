@@ -17,6 +17,11 @@ public class CandidateService {
     @Autowired
     StorageService storageService;
     public String candidateRegister(CandidateProfile candidateProfile, HttpServletRequest request) throws Exception {
+
+        if(!(isVacantPosition(candidateProfile.getPosition()))){
+            return "Application status is closed.";
+        }
+
         LocalDate date = LocalDate.now();
         try{
             String checkQuery = "select emailId from candidateProfile where emailId =? and date =?";
@@ -90,4 +95,19 @@ public class CandidateService {
         jdbcTemplate.update(delWork,emailId,date);
         jdbcTemplate.update(delAddress,emailId,date);
     }
+
+    public boolean isVacantPosition(String position){
+        String query = "select status from Technologies where designation = ?";
+        try {
+            String status = jdbcTemplate.queryForObject(query, String.class, position);
+            if(status.equalsIgnoreCase("Active"))
+            {
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 }

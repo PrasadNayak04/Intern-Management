@@ -2,10 +2,13 @@ package com.robosoft.internmanagement.service;
 
 import com.robosoft.internmanagement.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.sql.Date;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +19,7 @@ public class RecruiterService
     JdbcTemplate jdbcTemplate;
 
     String query;
+
     public List<Organizer> getOrganizer(String emailId)
     {
         List<Organizer> organizerList = new ArrayList<>();
@@ -27,7 +31,6 @@ public class RecruiterService
                     organizer.setName(resultSet.getString(1));
                     organizer.setProfile(resultSet.getString(3));
                     organizer.setInterviews(getInterviewsCount(resultSet.getString(2), emailId));
-
                     organizerList.add(organizer);
                     return organizer;
                 });
@@ -84,15 +87,56 @@ public class RecruiterService
         }
     }
 
-    public List<CvAnalysis> cvAnalysisPage()
+    public List<CvAnalysis> cvAnalysisPage(Date date)
     {
-        query = "select applications.designation,application.count(designation),date,status,location from applications,technologies where applications.designation = technologies.designation and date=curDate() group by designation";
-        return jdbcTemplate.query(query,new BeanPropertyRowMapper<>(CvAnalysis.class));
+        List<CvAnalysis> cvAnalysisList = new ArrayList<>();
+        if(date == null){
+            date = Date.valueOf(LocalDate.now());
+        }
+        query = "select applications.designation,count(applications.designation),date,status from applications,technologies where applications.designation = technologies.designation and date=? group by designation";
+        jdbcTemplate.query(query,
+                (resultSet, no) -> {
+                    CvAnalysis cvAnalysis = new CvAnalysis();
+
+                    cvAnalysis.setDesignation(resultSet.getString(1));
+                    cvAnalysis.setApplicants(resultSet.getInt(2));
+                    cvAnalysis.setReceivedDate(resultSet.getDate(3));
+                    cvAnalysis.setStatus(resultSet.getString(4));
+                    cvAnalysis.setLocations(getLocationsByDesignation(resultSet.getString(1)));
+
+                    cvAnalysisList.add(cvAnalysis);
+                    return cvAnalysis;
+                }, date);
+        return cvAnalysisList;
     }
 
     public CvAnalysis searchDesignation(String designation)
     {
-        query  = "select applications.designation,application.count(designation),date,status,location from applications,technologies where applications.designation = technologies.designation and date=curDate() and designation=? group by designation";
-        return jdbcTemplate.queryForObject(query,new BeanPropertyRowMapper<>(CvAnalysis.class),designation);
+        query  = "select applications.designation,count(applications.designation),date,status from applications,technologies where applications.designation = technologies.designation and applications.designation=? group by applications.designation";
+        try {
+            return jdbcTemplate.queryForObject(query,
+                    (resultSet, no) -> {
+                        CvAnalysis cvAnalysis = new CvAnalysis();
+                        cvAnalysis.setDesignation(resultSet.getString(1));
+                        cvAnalysis.setApplicants(resultSet.getInt(2));
+                        cvAnalysis.setReceivedDate(resultSet.getDate(3));
+                        cvAnalysis.setStatus(resultSet.getString(4));
+                        cvAnalysis.setLocations(getLocationsByDesignation(designation));
+                        return cvAnalysis;
+                    }, designation);
+        } catch (DataAccessException e) {
+            return null;
+        }
     }
+
+    public int updateStatus(String designation, String newStatus){
+        query = "update Technologies set status = ? where designation = ?";
+        return jdbcTemplate.update(query, newStatus, designation);
+    }
+
+    public List<String> getLocationsByDesignation(String designation){
+        query = "select location from location where designation = ?";
+        return jdbcTemplate.queryForList(query, String.class, designation);
+    }
+
 }
