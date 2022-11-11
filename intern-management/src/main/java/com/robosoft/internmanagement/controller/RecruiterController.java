@@ -1,7 +1,10 @@
 package com.robosoft.internmanagement.controller;
 
 import com.robosoft.internmanagement.model.*;
+import com.robosoft.internmanagement.modelAttributes.Applications;
+import com.robosoft.internmanagement.modelAttributes.AssignBoard;
 import com.robosoft.internmanagement.service.EmailService;
+import com.robosoft.internmanagement.service.MemberService;
 import com.robosoft.internmanagement.service.RecruiterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -37,37 +40,37 @@ public class RecruiterController
     }
 
     @GetMapping("/organizer")
-    public List<Organizer> getList(@RequestParam String emailId)
+    public List<Organizer> getList()
     {
-        return recruiterService.getOrganizer(emailId);
+        return recruiterService.getOrganizer();
     }
 
     @GetMapping("/summary")
-    public Summary getSummary(@RequestParam String emailId)
+    public Summary getSummary()
     {
-        return recruiterService.getSummary(emailId);
+        return recruiterService.getSummary();
     }
 
     @GetMapping("/cv-count")
-    public int getCv(@RequestParam String emailId)
+    public int getCvCount()
     {
-        return recruiterService.cvCount(emailId);
+        return recruiterService.cvCount();
     }
 
     @GetMapping("/logged-profile")
-    public LoggedProfile getProfile(@RequestParam String emailId)
+    public LoggedProfile getProfile()
     {
-        return recruiterService.getProfile(emailId);
+        return recruiterService.getProfile();
     }
 
     @GetMapping("/notification-display")
-    public NotificationDisplay getNotifications(@RequestParam String emailId)
+    public NotificationDisplay getNotifications()
     {
-        return recruiterService.notification(emailId);
+        return recruiterService.notification();
     }
 
     @GetMapping("/cv-analysis")
-    public List<CvAnalysis> getCv ()
+    public List<CvAnalysis> getCv()
     {
         return recruiterService.cvAnalysisPage();
     }
@@ -76,6 +79,19 @@ public class RecruiterController
     public CvAnalysis search(@PathVariable String designation)
     {
         return recruiterService.searchDesignation(designation);
+    }
+
+    @GetMapping("/get-applicants")
+    public List<Applications> getApplicants()
+    {
+        return recruiterService.getNotAssignedApplicants();
+    }
+
+    @PutMapping("/assign-organizer")
+    public String setOrganizer(@ModelAttribute AssignBoard assignBoard)
+    {
+        System.out.println(MemberService.getCurrentUser());
+        return recruiterService.assignOrganizer(assignBoard);
     }
 
 }

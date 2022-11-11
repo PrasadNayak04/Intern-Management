@@ -4,14 +4,9 @@ import com.robosoft.internmanagement.modelAttributes.Member;
 import com.robosoft.internmanagement.modelAttributes.MemberProfile;
 import com.robosoft.internmanagement.service.JwtSecurity.BeanStore;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.converter.json.GsonBuilderUtils;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 
 @Service
 public class MemberService {
@@ -23,6 +18,16 @@ public class MemberService {
 
     @Autowired
     private StorageService storageService;
+
+    private static String currentUser;
+
+    public static String getCurrentUser() {
+        return currentUser;
+    }
+
+    public static void setCurrentUser(String currentUser) {
+        MemberService.currentUser = currentUser;
+    }
 
     String query;
 

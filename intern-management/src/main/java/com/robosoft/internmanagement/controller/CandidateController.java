@@ -1,6 +1,6 @@
 package com.robosoft.internmanagement.controller;
 
-import com.robosoft.internmanagement.modelAttribute.CandidateProfile;
+import com.robosoft.internmanagement.modelAttributes.CandidateProfile;
 import com.robosoft.internmanagement.service.CandidateService;
 import com.robosoft.internmanagement.service.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;

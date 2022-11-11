@@ -1,11 +1,11 @@
 package com.robosoft.internmanagement.modelAttributes;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @Data
-@NoArgsConstructor
+@AllArgsConstructor
+@RequiredArgsConstructor
 public class MemberProfile {
 
     private String name;

@@ -2,7 +2,6 @@ package com.robosoft.internmanagement.service;
 
 import com.robosoft.internmanagement.modelAttributes.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -25,8 +24,9 @@ public class CandidateService {
         }
         catch (Exception e) {
             try {
-                String query1 = "insert into candidateProfile(name,dob,mobileNumber,emailId,date,jobLocation,gender,position,expYear,expMonth,candidateType,contactPerson,languagesKnown,softwaresWorked,skills,about,currentCTC,expectedCTC) values('" + candidateProfile.getName() + "','" + candidateProfile.getDob() + "','" + candidateProfile.getMobileNumber() + "','" + candidateProfile.getEmailId() + "','" + LocalDate.now() + "','" + candidateProfile.getJobLocation() + "','" + candidateProfile.getGender() + "','" + candidateProfile.getPosition() + "'," + candidateProfile.getExpYear() + "," + candidateProfile.getExpMonth() + ",'" + candidateProfile.getCandidateType() + "','" + candidateProfile.getContactPerson() + "','" + candidateProfile.getLanguagesKnown() + "','" + candidateProfile.getSoftwareWorked() + "','" + candidateProfile.getSkills() + "','" + candidateProfile.getAbout() + "'," + candidateProfile.getCurrentCTC() + "," + candidateProfile.getExpectedCTC() + ")";
-                jdbcTemplate.update(query1);
+                String query1 = "insert into candidateProfile(name,dob,mobileNumber,emailId,date,jobLocation,gender,position,expYear,expMonth,candidateType,contactPerson,languagesKnown,softwaresWorked,skills,about,currentCTC,expectedCTC) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                System.out.println("ww");
+                jdbcTemplate.update(query1,candidateProfile.getName(),candidateProfile.getDob(),candidateProfile.getMobileNumber(),candidateProfile.getEmailId(),date,candidateProfile.getJobLocation(),candidateProfile.getGender(),candidateProfile.getPosition(),candidateProfile.getExpYear(),candidateProfile.getExpMonth(),candidateProfile.getCandidateType(),candidateProfile.getContactPerson(),candidateProfile.getLanguagesKnown(),candidateProfile.getSoftwareWorked(),candidateProfile.getSkills(),candidateProfile.getAbout(),candidateProfile.getCurrentCTC(),candidateProfile.getExpectedCTC());
                 String photoRes = storageService.singleFileUpload(candidateProfile.getPhoto(), candidateProfile.getEmailId(), request);
                 if (photoRes.equals("empty")) {
                     throw new Exception("File empty");
@@ -71,14 +71,15 @@ public class CandidateService {
 
             } catch (Exception e1) {
                 delCandidateQuery(candidateProfile.getEmailId(), date);
-
-                //delete local photo query needed
+                e1.printStackTrace();
+                    //delete local photo query needed
             }
 
             return "Candidate saved successfully";
         }
     }
     public void delCandidateQuery(String emailId,LocalDate date) {
+        System.out.println("catch");
         String delQuery = "delete from candidateProfile where emailId = '"+ emailId+"'";
         String delPhotoUrl = "delete from documents where emailId = ? and date = ?";
         String delEducation = "delete from education where emailId = ? and date = ?";
