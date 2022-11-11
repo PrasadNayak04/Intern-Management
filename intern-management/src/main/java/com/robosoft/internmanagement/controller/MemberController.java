@@ -44,9 +44,8 @@ public class MemberController {
     private TokenManager tokenManager;
 
     @PostMapping("/member-login")
-    public ResponseEntity<?> createToken(@ModelAttribute Member member, @RequestParam MultipartFile file, HttpServletRequest request) throws Exception {
+    public ResponseEntity<?> createToken(@ModelAttribute Member member, HttpServletRequest request) throws Exception {
         try {
-            storageService.singleFileUpload(file, member.getEmailId(), request);
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(member.getEmailId(), member.getPassword()));
         } catch (DisabledException e) {
             throw new Exception("USER_DISABLED", e);
@@ -55,7 +54,6 @@ public class MemberController {
         }
 
         final UserDetails userDetails = userDetailsService.loadUserByUsername(member.getEmailId());
-        System.out.println("hi");
         final String jwtToken = tokenManager.generateJwtToken(userDetails);
         return ResponseEntity.ok(jwtToken); //new JwtResponseModel(jwtToken)
     }
@@ -64,11 +62,6 @@ public class MemberController {
     public String registerMember(@ModelAttribute MemberProfile memberProfile, HttpServletRequest request){
         return memberService.registerMember(memberProfile, request);
     }
-
-  /*  @PostMapping("/")
-    public String storeFile(@RequestParam MultipartFile file, String email, HttpServletRequest request){
-
-    }*/
 
     @GetMapping("/fetch/{folderName}/{fileName}")
     public ResponseEntity<Resource> getFile(@PathVariable String folderName, @PathVariable String fileName, HttpServletRequest request) throws IOException {
@@ -84,17 +77,6 @@ public class MemberController {
 
         // Try to determine file's content type
         String contentType = storageService.getContentType(request, resource);
-        /*try {
-            contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
-            System.out.println(contentType);
-        } catch (IOException ex) {
-            System.out.println("Could not determine file type.");
-        }
-
-        // Fallback to the default content type if type could not be determined
-        if (contentType == null) {
-            contentType = "application/octet-stream";
-        }*/
 
         return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
