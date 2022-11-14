@@ -3,9 +3,11 @@ package com.robosoft.internmanagement.service;
 import com.robosoft.internmanagement.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.expression.spel.ast.PropertyOrFieldReference;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.sql.Date;
 import java.time.LocalDate;
@@ -137,6 +139,26 @@ public class RecruiterService
     public List<String> getLocationsByDesignation(String designation){
         query = "select location from location where designation = ?";
         return jdbcTemplate.queryForList(query, String.class, designation);
+    }
+
+    public List<TopTechnologies> getTopTechnologies(String designation) {
+        query = "select technologies.designation,location.location from technologies left join location using(designation) left join applications using(designation) where designation != ? group by technologies.designation order by count(applications.designation) desc limit 5";
+        List<TopTechnologies> topTechnologies = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(TopTechnologies.class),designation);
+        List<String> locations = getLocationsByDesignation(designation);
+        int size = locations.size();
+        TopTechnologies technologies = new TopTechnologies(designation,locations);
+        topTechnologies.add(0,technologies);
+        return topTechnologies;
+    }
+
+    public String getLastJobPosition(String emailId) {
+        query = "select position from workHistory where emailId = ? order by fromDate desc";
+        List<String> positions = jdbcTemplate.query(query,new BeanPropertyRowMapper<>(String.class));
+        return positions.get(0);
+    }
+    public List<ProfileAnalysis> getProfileBasedOnStatus(@PathVariable String designation, @PathVariable String status) {
+        query = "select candidateprofile.name,documents.imageUrl,candidateprofile.skills from assignboard inner join applications using(applicationId) and where recruiterEmail = ? inner join candidateprofile using(emailId) inner join documents using(emailId) where assignboard.status = ? and applications.designation = ?";
+        return null;
     }
 
 }

@@ -12,7 +12,7 @@ import java.sql.Date;
 import java.util.List;
 
 @RestController
-@RequestMapping("/intern-management")
+@RequestMapping("/intern-management/recruiter")
 public class RecruiterController
 {
     @Autowired
@@ -84,5 +84,14 @@ public class RecruiterController
     public int updatePositionStatus(@RequestParam String designation, @RequestParam String newStatus){
         return recruiterService.updateStatus(designation, newStatus);
     }
+    @GetMapping("/top-technologies/{designation}")
+    public ResponseEntity<?> getTopTechnologies(@PathVariable String designation) {
+        List<TopTechnologies> technologies = recruiterService.getTopTechnologies(designation);
+        if(technologies.get(0).getLocation().size()==0) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Result not found for "+designation);
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(technologies);
+    }
 
+    //pagination
 }

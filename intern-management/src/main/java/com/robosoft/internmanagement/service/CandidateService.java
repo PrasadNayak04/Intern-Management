@@ -76,7 +76,7 @@ public class CandidateService {
 
             } catch (Exception e1) {
                 delCandidateQuery(candidateProfile.getEmailId(), date);
-
+                e1.printStackTrace();
                 //delete local photo query needed
             }
 

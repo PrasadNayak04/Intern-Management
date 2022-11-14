@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @RestController
+@RequestMapping("/intern-management/candidate")
 public class CandidateController {
 
     @Autowired
@@ -47,7 +48,7 @@ public class CandidateController {
     }
 
 
-    @PostMapping("/candidate-register")
+    @PostMapping("/register")
     public String candidateRegister(@ModelAttribute CandidateProfile candidateProfile, HttpServletRequest request) throws Exception {
         System.out.println(candidateProfile);
         return candidateService.candidateRegister(candidateProfile,request);
