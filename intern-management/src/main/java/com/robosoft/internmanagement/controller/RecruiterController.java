@@ -12,7 +12,7 @@ import java.sql.Date;
 import java.util.List;
 
 @RestController
-@RequestMapping("/intern-management")
+@RequestMapping("/intern-management/recruiter")
 public class RecruiterController
 {
     @Autowired
@@ -83,6 +83,28 @@ public class RecruiterController
     @PostMapping("/update-position-status")
     public int updatePositionStatus(@RequestParam String designation, @RequestParam String newStatus){
         return recruiterService.updateStatus(designation, newStatus);
+    }
+
+    @GetMapping("/extended-cv/{emailId}")
+    public ResponseEntity<?> getExtendedCV(@PathVariable String emailId){
+        ExtendedCV extendedCV = recruiterService.getBasicCVDetails(emailId);
+        if(extendedCV == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No candidate found with email " + emailId);
+        }
+        extendedCV.setEducations(recruiterService.getEducationsHistory(emailId));
+        extendedCV.setWorkHistories(recruiterService.getWorkHistory(emailId));
+        extendedCV.setLinks(recruiterService.getSocialLinks(emailId));
+        return ResponseEntity.ok(extendedCV);
+    }
+
+    @GetMapping("/resume-url/{emailId}")
+    public ResponseEntity<?> getResumeDownloadUrl(@PathVariable String emailId){
+        String url = recruiterService.downloadCV(emailId);
+        if(url.equals(null))
+        {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(url);
     }
 
 }

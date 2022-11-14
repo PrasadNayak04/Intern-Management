@@ -27,7 +27,7 @@ import java.nio.file.Paths;
 
 @RestController
 @CrossOrigin
-@RequestMapping("/intern-management")
+@RequestMapping("/intern-management/member")
 public class MemberController {
 
     @Autowired
@@ -44,12 +44,12 @@ public class MemberController {
     @Autowired
     private TokenManager tokenManager;
 
-    @PostMapping("/member-register")
+    @PostMapping("/register")
     public String registerMember(@ModelAttribute MemberProfile memberProfile, HttpServletRequest request){
         return memberService.registerMember(memberProfile, request);
     }
 
-    @PostMapping("/member-login")
+    @PostMapping("/login")
     public ResponseEntity<?> createToken(@ModelAttribute Member member, HttpServletRequest request) throws Exception {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(member.getEmailId(), member.getPassword()));
@@ -65,7 +65,7 @@ public class MemberController {
         return ResponseEntity.ok(jwtToken); //new JwtResponseModel(jwtToken)
     }
 
-    @PatchMapping("/member-password-update")
+    @PatchMapping("/password-update")
     public ResponseEntity<?> updatePassword(@ModelAttribute Member member){
         int updateStatus = memberService.updatePassword(member);
         if(updateStatus == 1){

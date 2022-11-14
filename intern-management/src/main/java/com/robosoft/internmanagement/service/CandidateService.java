@@ -1,8 +1,10 @@
 package com.robosoft.internmanagement.service;
 
+import com.robosoft.internmanagement.model.ExtendedCV;
 import com.robosoft.internmanagement.modelAttributes.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +18,9 @@ public class CandidateService {
     JdbcTemplate jdbcTemplate;
     @Autowired
     StorageService storageService;
+
+    String query;
+
     public String candidateRegister(CandidateProfile candidateProfile, HttpServletRequest request) throws Exception {
 
         if(!(isVacantPosition(candidateProfile.getPosition()))){
@@ -75,8 +80,9 @@ public class CandidateService {
 
 
             } catch (Exception e1) {
+                e1.printStackTrace();
                 delCandidateQuery(candidateProfile.getEmailId(), date);
-
+                return "Save failed";
                 //delete local photo query needed
             }
 
@@ -97,7 +103,7 @@ public class CandidateService {
     }
 
     public boolean isVacantPosition(String position){
-        String query = "select status from Technologies where designation = ?";
+        query = "select status from Technologies where designation = ?";
         try {
             String status = jdbcTemplate.queryForObject(query, String.class, position);
             if(status.equalsIgnoreCase("Active"))
@@ -109,5 +115,8 @@ public class CandidateService {
             return false;
         }
     }
+
+
+
 
 }

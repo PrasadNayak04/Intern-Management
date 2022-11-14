@@ -11,7 +11,6 @@ import java.sql.Date;
 @RequiredArgsConstructor
 public class Applications {
 
-    private int applicationId;
     private String emailId;
     private String designation;
     private String location;

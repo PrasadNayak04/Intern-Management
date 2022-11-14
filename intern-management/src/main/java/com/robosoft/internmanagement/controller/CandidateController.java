@@ -1,5 +1,6 @@
 package com.robosoft.internmanagement.controller;
 
+import com.robosoft.internmanagement.model.ExtendedCV;
 import com.robosoft.internmanagement.modelAttributes.CandidateProfile;
 import com.robosoft.internmanagement.service.CandidateService;
 import com.robosoft.internmanagement.service.StorageService;
@@ -18,6 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @RestController
+@RequestMapping("/intern-management/candidate")
 public class CandidateController {
 
     @Autowired
@@ -46,10 +48,11 @@ public class CandidateController {
                 .body(resource);
     }
 
-
-    @PostMapping("/candidate-register")
+    @PostMapping("/register")
     public String candidateRegister(@ModelAttribute CandidateProfile candidateProfile, HttpServletRequest request) throws Exception {
         System.out.println(candidateProfile);
         return candidateService.candidateRegister(candidateProfile,request);
     }
+
+
 }

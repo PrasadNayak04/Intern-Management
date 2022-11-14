@@ -42,7 +42,7 @@ public class MemberService {
             System.out.println("inside member email" + memberEmail);
             query = "select password from member where emailId = '" + memberEmail + "'";
             String bcryptPass = jdbcTemplate.queryForObject(query, String.class);
-            return new Member(memberEmail, bcryptPass);
+            return new Member(memberEmail, bcryptPass, "role_recruiter");
 
         } catch (Exception e){
             e.printStackTrace();
