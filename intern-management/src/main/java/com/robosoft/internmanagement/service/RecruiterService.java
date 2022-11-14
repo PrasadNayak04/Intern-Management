@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -156,9 +157,23 @@ public class RecruiterService
         List<String> positions = jdbcTemplate.query(query,new BeanPropertyRowMapper<>(String.class));
         return positions.get(0);
     }
-    public List<ProfileAnalysis> getProfileBasedOnStatus(@PathVariable String designation, @PathVariable String status) {
-        query = "select candidateprofile.name,documents.imageUrl,candidateprofile.skills from assignboard inner join applications using(applicationId) and where recruiterEmail = ? inner join candidateprofile using(emailId) inner join documents using(emailId) where assignboard.status = ? and applications.designation = ?";
-        return null;
+    public List<ProfileAnalysis> getProfileBasedOnStatus(String designation, String status) {
+        query = "select candidateprofile.name,documents.imageUrl,candidateprofile.emailId,candidateprofile.skills from assignboard inner join applications using(applicationId) inner join candidateprofile using(emailId) inner join documents using(emailId) where recruiterEmail = ? and assignboard.status = ? and applications.designation = ?";
+//        select candidateprofile.name,documents.imageUrl,candidateprofile.skills from assignboard inner join applications using(applicationId) inner join candidateprofile using(emailId) inner join documents using(emailId)  where recruiterEmail = "nisha@gmail.com" and  assignboard.status = "new" and applications.designation = "java"
+        //in case of error above code is working
+        try {
+            return Collections.singletonList(jdbcTemplate.queryForObject(query,
+                    (resultSet, no) -> {
+                        ProfileAnalysis profileAnalysis = new ProfileAnalysis();
+                        profileAnalysis.setName(resultSet.getString(1));
+                        profileAnalysis.setImageUrl(resultSet.getString(2));
+                        profileAnalysis.setPosition(getLastJobPosition(resultSet.getString(3)));//email parameter aadh yencha korpini
+                        profileAnalysis.setSkills(resultSet.getString(4));
+                        return profileAnalysis;
+                    }, MemberService.getCurrentUser(), status, designation));
+        } catch (DataAccessException e) {
+            return null;
+        }
     }
 
 }

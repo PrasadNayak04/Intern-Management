@@ -15,6 +15,7 @@ public class ProfileAnalysis {
     private String name;
     private String imageUrl;
     private String skills;
+    private String emailId;
     private String position;
 
 }

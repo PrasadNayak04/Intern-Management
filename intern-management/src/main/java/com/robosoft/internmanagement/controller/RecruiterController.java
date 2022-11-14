@@ -3,6 +3,7 @@ package com.robosoft.internmanagement.controller;
 import com.robosoft.internmanagement.model.*;
 import com.robosoft.internmanagement.service.EmailService;
 import com.robosoft.internmanagement.service.RecruiterService;
+import jdk.jfr.StackTrace;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -94,4 +95,8 @@ public class RecruiterController
     }
 
     //pagination
+    @GetMapping("/fetch-profile/{designation}/{status}")
+    public ResponseEntity<?> getProfileBasedOnStatus(@PathVariable String designation, @PathVariable String status) {
+        return ResponseEntity.status(HttpStatus.FOUND).body(recruiterService.getProfileBasedOnStatus(designation, status));
+    }
 }
