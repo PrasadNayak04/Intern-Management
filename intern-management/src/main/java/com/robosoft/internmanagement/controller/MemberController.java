@@ -4,12 +4,12 @@ import com.robosoft.internmanagement.modelAttributes.*;
 import com.robosoft.internmanagement.service.JwtSecurity.JwtUserDetailsService;
 import com.robosoft.internmanagement.service.JwtSecurity.TokenManager;
 import com.robosoft.internmanagement.service.MemberService;
-import com.robosoft.internmanagement.service.RecruiterService;
 import com.robosoft.internmanagement.service.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,7 +18,6 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -45,6 +44,11 @@ public class MemberController {
     @Autowired
     private TokenManager tokenManager;
 
+    @PostMapping("/member-register")
+    public String registerMember(@ModelAttribute MemberProfile memberProfile, HttpServletRequest request){
+        return memberService.registerMember(memberProfile, request);
+    }
+
     @PostMapping("/member-login")
     public ResponseEntity<?> createToken(@ModelAttribute Member member, HttpServletRequest request) throws Exception {
         try {
@@ -61,9 +65,13 @@ public class MemberController {
         return ResponseEntity.ok(jwtToken); //new JwtResponseModel(jwtToken)
     }
 
-    @PostMapping("/member-register")
-    public String registerMember(@ModelAttribute MemberProfile memberProfile, HttpServletRequest request){
-        return memberService.registerMember(memberProfile, request);
+    @PatchMapping("/member-password-update")
+    public ResponseEntity<?> updatePassword(@ModelAttribute Member member){
+        int updateStatus = memberService.updatePassword(member);
+        if(updateStatus == 1){
+            return ResponseEntity.ok("Password updated successfully");
+        }
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update password");
     }
 
     @GetMapping("/fetch/{folderName}/{fileName}")

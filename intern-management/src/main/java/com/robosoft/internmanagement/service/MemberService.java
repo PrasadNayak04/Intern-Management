@@ -69,6 +69,15 @@ public class MemberService {
         }
     }
 
+    public int updatePassword(Member member){
+        query = "update member set password = ? where emailId = ?";
+        try{
+            return jdbcTemplate.update(query, encodePassword(member.getPassword()), member.getEmailId());
+        }catch (Exception e){
+            return 0;
+        }
+    }
+
     public String encodePassword(String password){
         return beanStore.passwordEncoder().encode(password);
     }

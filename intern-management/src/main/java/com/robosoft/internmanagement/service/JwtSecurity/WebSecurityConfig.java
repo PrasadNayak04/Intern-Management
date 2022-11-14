@@ -39,7 +39,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
-                .authorizeRequests().antMatchers("/intern-management","/intern-management/member-register", "/intern-management/member-login", "/intern-management/cv-analysis", "/intern-management/search/{designation}","/intern-management/update-position-status").permitAll()
+                .authorizeRequests().antMatchers("/intern-management","/intern-management/member-register", "/intern-management/member-login", "/intern-management/cv-analysis", "/intern-management/search/{designation}","/intern-management/update-position-status","/intern-management/member-password-update").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .exceptionHandling().authenticationEntryPoint(authenticationEntryPoint)
