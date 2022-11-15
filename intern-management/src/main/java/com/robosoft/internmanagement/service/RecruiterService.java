@@ -153,25 +153,27 @@ public class RecruiterService
     }
 
     public String getLastJobPosition(String emailId) {
+        System.out.println("yo");
         query = "select position from workHistory where emailId = ? order by fromDate desc";
-        List<String> positions = jdbcTemplate.query(query,new BeanPropertyRowMapper<>(String.class));
+        List<String> positions = jdbcTemplate.queryForList(query,String.class,emailId);
         return positions.get(0);
     }
     public List<ProfileAnalysis> getProfileBasedOnStatus(String designation, String status) {
         query = "select candidateprofile.name,documents.imageUrl,candidateprofile.emailId,candidateprofile.skills from assignboard inner join applications using(applicationId) inner join candidateprofile using(emailId) inner join documents using(emailId) where recruiterEmail = ? and assignboard.status = ? and applications.designation = ?";
-//        select candidateprofile.name,documents.imageUrl,candidateprofile.skills from assignboard inner join applications using(applicationId) inner join candidateprofile using(emailId) inner join documents using(emailId)  where recruiterEmail = "nisha@gmail.com" and  assignboard.status = "new" and applications.designation = "java"
-        //in case of error above code is working
+        List<ProfileAnalysis> profileAnalyses = new ArrayList<>();
         try {
-            return Collections.singletonList(jdbcTemplate.queryForObject(query,
+            return jdbcTemplate.query(query,
                     (resultSet, no) -> {
                         ProfileAnalysis profileAnalysis = new ProfileAnalysis();
                         profileAnalysis.setName(resultSet.getString(1));
                         profileAnalysis.setImageUrl(resultSet.getString(2));
                         profileAnalysis.setPosition(getLastJobPosition(resultSet.getString(3)));//email parameter aadh yencha korpini
                         profileAnalysis.setSkills(resultSet.getString(4));
+                        profileAnalyses.add(profileAnalysis);
                         return profileAnalysis;
-                    }, MemberService.getCurrentUser(), status, designation));
+                    }, MemberService.getCurrentUser(), status, designation);
         } catch (DataAccessException e) {
+            e.printStackTrace();
             return null;
         }
     }
