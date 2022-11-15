@@ -1,8 +1,8 @@
 package com.robosoft.internmanagement.service;
 
 import com.robosoft.internmanagement.modelAttributes.*;
+import org.apache.tomcat.util.http.fileupload.impl.SizeLimitExceededException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +16,9 @@ public class CandidateService {
     JdbcTemplate jdbcTemplate;
     @Autowired
     StorageService storageService;
+
+    String query;
+
     public String candidateRegister(CandidateProfile candidateProfile, HttpServletRequest request) throws Exception {
 
         if(!(isVacantPosition(candidateProfile.getPosition()))){
@@ -75,15 +78,15 @@ public class CandidateService {
 
 
             } catch (Exception e1) {
+                System.out.println(e1);
                 delCandidateQuery(candidateProfile.getEmailId(), date);
-                System.out.println("Bro");
-                e1.printStackTrace();
-                //delete local photo query needed
+                return "Save failed";
             }
 
             return "Candidate saved successfully";
         }
     }
+
     public void delCandidateQuery(String emailId,LocalDate date) {
         String delQuery = "delete from candidateProfile where emailId = '"+ emailId+"'";
         String delPhotoUrl = "delete from documents where emailId = ? and date = ?";
@@ -98,7 +101,7 @@ public class CandidateService {
     }
 
     public boolean isVacantPosition(String position){
-        String query = "select status from Technologies where designation = ?";
+        query = "select status from Technologies where designation = ?";
         try {
             String status = jdbcTemplate.queryForObject(query, String.class, position);
             if(status.equalsIgnoreCase("Active"))
@@ -110,5 +113,8 @@ public class CandidateService {
             return false;
         }
     }
+
+
+
 
 }

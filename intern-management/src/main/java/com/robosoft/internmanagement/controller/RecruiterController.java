@@ -94,6 +94,29 @@ public class RecruiterController
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(technologies);
     }
 
+    @GetMapping("/extended-cv/{emailId}")
+    public ResponseEntity<?> getExtendedCV(@PathVariable String emailId){
+        System.out.println("Hi");
+        ExtendedCV extendedCV = recruiterService.getBasicCVDetails(emailId);
+        if(extendedCV == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No candidate found with email " + emailId);
+        }
+        extendedCV.setEducations(recruiterService.getEducationsHistory(emailId));
+        extendedCV.setWorkHistories(recruiterService.getWorkHistory(emailId));
+        extendedCV.setLinks(recruiterService.getSocialLinks(emailId));
+        return ResponseEntity.ok(extendedCV);
+    }
+
+    @GetMapping("/resume-url/{emailId}")
+    public ResponseEntity<?> getResumeDownloadUrl(@PathVariable String emailId){
+        String url = recruiterService.downloadCV(emailId);
+        if(url.equals(null))
+        {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(url);
+    }
+
     //pagination
     @GetMapping("/fetch-profile/{designation}/{status}")
     public ResponseEntity<?> getProfileBasedOnStatus(@PathVariable String designation, @PathVariable String status) {

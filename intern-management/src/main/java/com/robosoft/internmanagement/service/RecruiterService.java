@@ -1,6 +1,9 @@
 package com.robosoft.internmanagement.service;
 
 import com.robosoft.internmanagement.model.*;
+import com.robosoft.internmanagement.modelAttributes.Education;
+import com.robosoft.internmanagement.modelAttributes.Link;
+import com.robosoft.internmanagement.modelAttributes.WorkHistory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.expression.spel.ast.PropertyOrFieldReference;
@@ -140,6 +143,52 @@ public class RecruiterService
     public List<String> getLocationsByDesignation(String designation){
         query = "select location from location where designation = ?";
         return jdbcTemplate.queryForList(query, String.class, designation);
+    }
+
+    public ExtendedCV getBasicCVDetails(String emailId){
+        try{
+            query = "select name, dob, mobileNumber, CandidateProfile.emailId, jobLocation, position, expYear, expMonth, candidateType, contactPerson, languagesKnown, softwaresWorked, skills, about, expectedCTC, attachmentUrl, imageUrl from CandidateProfile inner join documents using(EmailId) inner join  applications  using(emailId) inner join assignboard using(applicationId)  where assignboard.recruiterEmail= ?  and  documents.emailId = ?";
+            return jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(ExtendedCV.class), MemberService.getCurrentUser(), emailId);
+        } catch (DataAccessException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public List<Education> getEducationsHistory(String emailId){
+        query = "select * from Education where emailId = ?";
+        try {
+            return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(Education.class), emailId);
+        } catch (DataAccessException e) {
+            return null;
+        }
+    }
+
+    public List<WorkHistory> getWorkHistory(String emailId){
+        query = "select * from WorkHistory where emailId = ?";
+        try{
+            return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(WorkHistory.class), emailId);
+        } catch (DataAccessException e) {
+            return null;
+        }
+    }
+
+    public List<Link> getSocialLinks(String emailId){
+        query = "select * from Links where emailId = ?";
+        try{
+            return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(Link.class), emailId);
+        } catch (DataAccessException e) {
+            return null;
+        }
+    }
+
+    public String downloadCV(String emailId){
+        query = "select attachmentUrl from documents where emailId = ?";
+        try{
+            return jdbcTemplate.queryForObject(query, String.class, emailId);
+        } catch (DataAccessException e) {
+            return null;
+        }
     }
 
     public List<TopTechnologies> getTopTechnologies(String designation) {

@@ -3,8 +3,6 @@ package com.robosoft.internmanagement.service;
 import org.apache.tomcat.util.http.fileupload.impl.SizeLimitExceededException;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -12,7 +10,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.nio.channels.MulticastChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,10 +21,10 @@ public class StorageService {
 
     private final Path root = Paths.get("src\\main\\resources\\static\\documents\\");
 
-    public String singleFileUpload(MultipartFile file, String email, HttpServletRequest request) {
+    public String singleFileUpload(MultipartFile file, String email, HttpServletRequest request) throws Exception {
         String fileUrl = null;
         if (file.isEmpty()) {
-            return "file is empty";
+            throw new Exception("File is empty");
         }
 
         try {
@@ -36,33 +33,28 @@ public class StorageService {
                 newDirectory.mkdir();
             }
             String CREATED_FOLDER = UPLOADED_FOLDER + email + "\\";
-            // Get the file and save it somewhere
             byte[] bytes = file.getBytes();
             Path path = Paths.get(CREATED_FOLDER  + file.getOriginalFilename());
-            Resource resource = new UrlResource(path.toUri());
-            String contentType = getContentType(request, resource);
             System.out.println(path);
             Files.write(path, bytes);
             fileUrl = generateDocumentUrl(email + "/" + file.getOriginalFilename());
             System.out.println(fileUrl);
-            
 
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException i) {
+            throw new Exception("Errors while uploading file");
         }
 
         return fileUrl;
     }
 
     public String generateDocumentUrl(String fileName){
-        final String apiUrl = "http://localhost:8080/intern-management/fetch/";
+        final String apiUrl = "http://localhost:8080/intern-management/member/fetch/";
         return apiUrl + fileName;
     }
 
     public Resource load(String filename) {
 
         System.out.println("src\\main\\resources\\static\\documents\\".length());
-        //String file;
         try {
             Path file = root.resolve(filename);
             Resource resource = new UrlResource(file.toUri());
@@ -86,7 +78,6 @@ public class StorageService {
             System.out.println("Could not determine file type.");
         }
 
-        // Fallback to the default content type if type could not be determined
         if (contentType == null) {
             contentType = "application/octet-stream";
         }
