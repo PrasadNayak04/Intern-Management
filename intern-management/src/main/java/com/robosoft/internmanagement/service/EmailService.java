@@ -1,5 +1,6 @@
 package com.robosoft.internmanagement.service;
 
+import com.robosoft.internmanagement.modelAttributes.CandidateInvites;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -7,6 +8,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Random;
 
 @Service
@@ -93,5 +95,53 @@ public class EmailService {
             return "Done";
         }
         return "Invalid OTP";
+    }
+
+    public boolean sendInviteEmail(CandidateInvites invites)
+    {
+
+        boolean flag = false;
+
+        String host = "smtp.gmail.com";
+        String subject = "Invite from Robosoft Technologies";
+
+
+        String message = "Inviting to join us as a intern.";
+
+        try
+        {
+
+            SimpleMailMessage mailMessage = new SimpleMailMessage();
+
+            mailMessage.setFrom(MemberService.getCurrentUser());
+            mailMessage.setTo(invites.getCandidateEmail());
+            mailMessage.setSubject(subject);
+            mailMessage.setText(message);
+
+            javaMailSender.send(mailMessage);
+            try
+            {
+                LocalDate date = LocalDate.now();
+                String query = "insert into candidateInvites(fromEmail,candidateName,designation,mobileNumber,location,jobDetails,candidateEmail,date) values(?,?,?,?,?,?,?,?)";
+                jdbcTemplate.update(query,MemberService.getCurrentUser(),invites.getCandidateName(),invites.getDesignation(),invites.getMobileNumber(),invites.getLocation(),invites.getJobDetails(),invites.getCandidateEmail(),date);
+
+            }
+            catch (Exception e)
+            {
+                flag = false;
+            }
+            flag = true;
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        finally
+        {
+            return flag;
+        }
+
     }
 }

@@ -2,6 +2,7 @@ package com.robosoft.internmanagement.controller;
 
 import com.robosoft.internmanagement.modelAttributes.Member;
 import com.robosoft.internmanagement.modelAttributes.MemberProfile;
+import com.robosoft.internmanagement.service.EmailService;
 import com.robosoft.internmanagement.service.JwtSecurity.JwtUserDetailsService;
 import com.robosoft.internmanagement.service.JwtSecurity.TokenManager;
 import com.robosoft.internmanagement.service.MemberService;
@@ -32,6 +33,9 @@ public class MemberLoginController {
     @Autowired
     private MemberService memberService;
 
+    @Autowired
+    private EmailService emailService;
+
 
     @PostMapping("/register")
     public String registerMember(@ModelAttribute MemberProfile memberProfile, HttpServletRequest request){
@@ -54,6 +58,23 @@ public class MemberLoginController {
         final String jwtToken = tokenManager.generateJwtToken(userDetails);
         MemberService.setCurrentUser(userDetails.getUsername());
         return ResponseEntity.ok(jwtToken);
+    }
+
+    @PostMapping("/otp")
+    public ResponseEntity<?> sendMail(@RequestParam String toEmail){
+        boolean mailSent = emailService.sendEmail(toEmail);
+
+        if(mailSent){
+            return ResponseEntity.ok().body("Otp has been sent to the email \"" + toEmail + "\"");
+        }else{
+            return ResponseEntity.status(HttpStatus.valueOf("Please provide valid email.")).build();
+        }
+    }
+
+    @PutMapping("/otp-verification")
+    public String verify(@RequestParam String emailId,@RequestParam String otp)
+    {
+        return emailService.verification(emailId,otp);
     }
 
     @PatchMapping("/password-update")

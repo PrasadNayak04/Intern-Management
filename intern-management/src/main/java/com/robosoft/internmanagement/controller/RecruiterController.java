@@ -1,9 +1,11 @@
 package com.robosoft.internmanagement.controller;
 
 import com.robosoft.internmanagement.model.*;
+import com.robosoft.internmanagement.modelAttributes.Applications;
+import com.robosoft.internmanagement.modelAttributes.AssignBoard;
+import com.robosoft.internmanagement.modelAttributes.CandidateInvites;
 import com.robosoft.internmanagement.service.EmailService;
 import com.robosoft.internmanagement.service.RecruiterService;
-import jdk.jfr.StackTrace;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.sql.Date;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/intern-management/recruiter")
@@ -22,51 +25,46 @@ public class RecruiterController
     @Autowired
     RecruiterService recruiterService;
 
-    @PostMapping("/send-otp")
-    public ResponseEntity<?> sendMail(@RequestParam String toEmail){
-        boolean mailSent = emailService.sendEmail(toEmail);
+    @GetMapping("/candidate-invitation")
+    public ResponseEntity<String> invites(@ModelAttribute CandidateInvites invites)
+    {
+        boolean result = emailService.sendInviteEmail(invites);
 
-        if(mailSent){
-            return ResponseEntity.ok().body("Otp has been sent to the email \"" + toEmail + "\"");
-        }else{
-            return ResponseEntity.status(HttpStatus.valueOf("Please provide valid email.")).build();
+        if (result){
+            return ResponseEntity.ok().body("Invite sent to " + invites.getCandidateName());
+        }else {
+            return ResponseEntity.status(HttpStatus.valueOf("Insufficient information")).build();
         }
     }
 
-    @PutMapping("/verify-otp")
-    public String verify(@RequestParam String emailId,@RequestParam String otp)
-    {
-        return emailService.verification(emailId,otp);
-    }
-
-    @GetMapping("/organizer")
+    @GetMapping("/organizers")
     public List<Organizer> getList(@RequestParam String emailId)
     {
         return recruiterService.getOrganizer(emailId);
     }
 
     @GetMapping("/summary")
-    public Summary getSummary(@RequestParam String emailId)
+    public Summary getSummary()
     {
-        return recruiterService.getSummary(emailId);
+        return recruiterService.getSummary();
     }
 
     @GetMapping("/cv-count")
-    public int getCv(@RequestParam String emailId)
+    public int getCv()
     {
-        return recruiterService.cvCount(emailId);
+        return recruiterService.cvCount();
     }
 
     @GetMapping("/logged-profile")
-    public LoggedProfile getProfile(@RequestParam String emailId)
+    public LoggedProfile getProfile()
     {
-        return recruiterService.getProfile(emailId);
+        return recruiterService.getProfile();
     }
 
     @GetMapping("/notification-display")
-    public NotificationDisplay getNotifications(@RequestParam String emailId)
+    public NotificationDisplay getNotifications()
     {
-        return recruiterService.notification(emailId);
+        return recruiterService.notification();
     }
 
     @GetMapping("/cv-analysis")
@@ -96,7 +94,6 @@ public class RecruiterController
 
     @GetMapping("/extended-cv/{emailId}")
     public ResponseEntity<?> getExtendedCV(@PathVariable String emailId){
-        System.out.println("Hi");
         ExtendedCV extendedCV = recruiterService.getBasicCVDetails(emailId);
         if(extendedCV == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No candidate found with email " + emailId);
@@ -118,8 +115,38 @@ public class RecruiterController
     }
 
     //pagination
-    @GetMapping("/fetch-profile/{designation}/{status}")
+    @GetMapping("/profiles/{designation}/{status}")
     public ResponseEntity<?> getProfileBasedOnStatus(@PathVariable String designation, @PathVariable String status) {
         return ResponseEntity.status(HttpStatus.FOUND).body(recruiterService.getProfileBasedOnStatus(designation, status));
     }
+
+    @GetMapping("/applicants")
+    public List<Applications> getApplicants()
+    {
+        return recruiterService.getNotAssignedApplicants();
+    }
+
+    @PutMapping("/organizer-assignation")
+    public ResponseEntity<String> setOrganizer(@ModelAttribute AssignBoard assignBoard)
+    {
+        String result = recruiterService.assignOrganizer(assignBoard);
+        if(result==null)
+        {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }else
+            return ResponseEntity.of(Optional.of(result));
+    }
+
+    @GetMapping("/assignboard")
+    public List<AssignBoardPage> getPage()
+    {
+        return recruiterService.getAssignBoardPage();
+    }
+
+    @GetMapping("/rejected-cv")
+    public List<RejectedCv> getCvPage()
+    {
+        return recruiterService.getRejectedCvPage();
+    }
+
 }

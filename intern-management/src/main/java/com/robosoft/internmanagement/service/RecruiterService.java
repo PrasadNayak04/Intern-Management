@@ -1,9 +1,7 @@
 package com.robosoft.internmanagement.service;
 
 import com.robosoft.internmanagement.model.*;
-import com.robosoft.internmanagement.modelAttributes.Education;
-import com.robosoft.internmanagement.modelAttributes.Link;
-import com.robosoft.internmanagement.modelAttributes.WorkHistory;
+import com.robosoft.internmanagement.modelAttributes.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.expression.spel.ast.PropertyOrFieldReference;
@@ -48,47 +46,47 @@ public class RecruiterService
         return jdbcTemplate.queryForObject(query, Integer.class, organizerEmail, recruiterEmail);
     }
 
-    public Summary getSummary(String emailId)
+    public Summary getSummary()
     {
-        Summary summary=null;
-        query = "select count(*) from assignBoard where year(date)=year(curDate()) and month(date)=month(curDate()) and recruiterMail=?";
-        int shortlisted = jdbcTemplate.queryForObject(query, Integer.class,emailId);
+        Summary summary = new Summary();
+        query = "select count(*) from assignBoard where year(AssignDate)=year(curDate()) and month(assignDate)=month(curDate()) and status = ? and recruiterEmail=?";
+        int shortlisted = jdbcTemplate.queryForObject(query, Integer.class,"Shortlisted",MemberService.getCurrentUser());
         summary.setShortlisted(shortlisted);
-        query = "select count(*) from assignBoard where year(date)=year(curDate()) and month(date)=month(curDate()) and recruiterMail=?";
-        int onHold = jdbcTemplate.queryForObject(query, Integer.class,emailId);
+        query = "select count(*) from assignBoard where year(assignDate)=year(curDate()) and month(assignDate)=month(curDate()) and status=? and recruiterEmail=?";
+        int onHold = jdbcTemplate.queryForObject(query, Integer.class,"New",MemberService.getCurrentUser());
         summary.setOnHold(onHold);
-        query = "select count(*) from assignBoard where year(date)=year(curDate) and month(date)=month(curDate) and recruiterMail=?";
-        int rejected = jdbcTemplate.queryForObject(query, Integer.class,emailId);
+        query = "select count(*) from assignBoard where year(assignDate)=year(curDate()) and month(assignDate)=month(curDate()) and status=? and recruiterEmail=?";
+        int rejected = jdbcTemplate.queryForObject(query, Integer.class,"Rejected",MemberService.getCurrentUser());
         summary.setRejected(rejected);
         int applications=shortlisted + onHold + rejected;
         summary.setApplications(applications);
         return summary;
     }
 
-    public int cvCount(String emailId)
+    public int cvCount()
     {
-        query = "select count(applicationId) from assignBoard where recruiterEmail=? and organizerEmail=?";
-        return jdbcTemplate.queryForObject(query, Integer.class,emailId,null);
+        query = "select count(applicationId) from assignBoard where recruiterEmail=? and organizerEmail is null";
+        return jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser());
     }
 
-    public LoggedProfile getProfile(String emailId)
+    public LoggedProfile getProfile()
     {
-        query = "select name,designation,profilePath from memberProfile where emailId=?";
-        return jdbcTemplate.queryForObject(query,new BeanPropertyRowMapper<>(LoggedProfile.class),emailId);
+        query = "select name,designation,photoUrl from memberProfile where emailId=?";
+        return jdbcTemplate.queryForObject(query,new BeanPropertyRowMapper<>(LoggedProfile.class),MemberService.getCurrentUser());
     }
 
-    public NotificationDisplay notification(String emailId) {
+    public NotificationDisplay notification() {
         String notification = "select message from notifications where emailId=? limit 1";
-        String notificationType = jdbcTemplate.queryForObject("select type from notifications where emailId=? limit 1", String.class, emailId);
-        int eventId = jdbcTemplate.queryForObject("select eventId from notifications where emailId=? limit 1", Integer.class, emailId);
+        String notificationType = jdbcTemplate.queryForObject("select type from notifications where emailId=? limit 1", String.class, MemberService.getCurrentUser());
+        int eventId = jdbcTemplate.queryForObject("select eventId from notifications where emailId=? limit 1", Integer.class, MemberService.getCurrentUser());
         if (notificationType.equalsIgnoreCase("Invite")) {
             String profileImage = "select photoPath from memberProfile,notifications,events,eventInvites where notifications.emailId=events.creatorEmail and events.eventId=eventInvites.eventId and eventInvites.invitedEmail=memberProfile.emailId and notifications.emailId=? and notifications.eventId=?";
-            List<String> Images = jdbcTemplate.query(profileImage, new BeanPropertyRowMapper<>(String.class), emailId, eventId);
-            NotificationDisplay display = jdbcTemplate.queryForObject(notification, new BeanPropertyRowMapper<>(NotificationDisplay.class), emailId);
+            List<String> Images = jdbcTemplate.query(profileImage, new BeanPropertyRowMapper<>(String.class),MemberService.getCurrentUser(), eventId);
+            NotificationDisplay display = jdbcTemplate.queryForObject(notification, new BeanPropertyRowMapper<>(NotificationDisplay.class), MemberService.getCurrentUser());
             display.setImages(Images);
             return display;
         } else {
-            NotificationDisplay display = jdbcTemplate.queryForObject(notification, new BeanPropertyRowMapper<>(NotificationDisplay.class), emailId);
+            NotificationDisplay display = jdbcTemplate.queryForObject(notification, new BeanPropertyRowMapper<>(NotificationDisplay.class), MemberService.getCurrentUser());
             return display;
         }
     }
@@ -225,6 +223,44 @@ public class RecruiterService
             e.printStackTrace();
             return null;
         }
+    }
+
+    public List<Applications> getNotAssignedApplicants()
+    {
+        query = "select applications.applicationId,emailId,designation,location,date from applications,assignBoard where applications.applicationId=assignBoard.applicationId and organizerEmail is null";
+        return jdbcTemplate.query(query,new BeanPropertyRowMapper<>(Applications.class));
+    }
+
+    public String assignOrganizer(AssignBoard assignBoard)
+    {
+        try {
+            query = "select name from memberProfile where emailId=? and position=?";
+            jdbcTemplate.queryForObject(query, String.class,assignBoard.getOrganizerEmail(),"Organizer");
+
+            try {
+                query = "update assignBoard set organizerEmail =?, assignDate=curDate() where recruiterEmail=? and applicationId=?";
+                jdbcTemplate.update(query,assignBoard.getOrganizerEmail(),MemberService.getCurrentUser(),assignBoard.getApplicationId());
+                return "Candidate assigned successfully";
+            }
+            catch (Exception e)
+            {
+                return "Give correct information";
+            }
+        } catch (Exception e) {
+            return "Select correct Organizer to assign";
+        }
+    }
+
+    public List<AssignBoardPage> getAssignBoardPage()
+    {
+        query = "select candidateProfile.name,applications.designation,applications.location,assignBoard.assignDate,memberProfile.name as organizer  from memberProfile inner join assignBoard on memberProfile.emailId=assignBoard.organizerEmail inner join applications on assignBoard.applicationId=applications.applicationId inner join candidateProfile on candidateProfile.emailId=applications.emailId where recruiterEmail=?";
+        return jdbcTemplate.query(query,new BeanPropertyRowMapper<>(AssignBoardPage.class),MemberService.getCurrentUser());
+    }
+
+    public List<RejectedCv> getRejectedCvPage()
+    {
+        query = "select candidateProfile.name,documents.ImageUrl,applications.designation,applications.location,candidateProfile.mobileNumber from documents inner join candidateProfile on documents.emailId=candidateProfile.emailId inner join applications on candidateProfile.emailId=applications.emailId inner join assignBoard on applications.applicationId=assignBoard.applicationId where assignBoard.status=?";
+        return jdbcTemplate.query(query,new BeanPropertyRowMapper<>(RejectedCv.class),"Rejected");
     }
 
 }
