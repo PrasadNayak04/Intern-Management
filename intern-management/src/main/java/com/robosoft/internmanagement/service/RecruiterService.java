@@ -167,7 +167,7 @@ public class RecruiterService
                         ProfileAnalysis profileAnalysis = new ProfileAnalysis();
                         profileAnalysis.setName(resultSet.getString(1));
                         profileAnalysis.setImageUrl(resultSet.getString(2));
-                        profileAnalysis.setPosition(getLastJobPosition(resultSet.getString(3)));//email parameter aadh yencha korpini
+                        profileAnalysis.setPosition(getLastJobPosition(resultSet.getString(3)));
                         profileAnalysis.setSkills(resultSet.getString(4));
                         profileAnalyses.add(profileAnalysis);
                         return profileAnalysis;
