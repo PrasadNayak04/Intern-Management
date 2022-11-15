@@ -1,6 +1,7 @@
 package com.robosoft.internmanagement.service;
 
 import com.robosoft.internmanagement.modelAttributes.*;
+import org.apache.tomcat.util.http.fileupload.impl.SizeLimitExceededException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -77,7 +78,7 @@ public class CandidateService {
 
 
             } catch (Exception e1) {
-                e1.printStackTrace();
+                System.out.println(e1);
                 delCandidateQuery(candidateProfile.getEmailId(), date);
                 return "Save failed";
             }
@@ -85,6 +86,7 @@ public class CandidateService {
             return "Candidate saved successfully";
         }
     }
+
     public void delCandidateQuery(String emailId,LocalDate date) {
         String delQuery = "delete from candidateProfile where emailId = '"+ emailId+"'";
         String delPhotoUrl = "delete from documents where emailId = ? and date = ?";

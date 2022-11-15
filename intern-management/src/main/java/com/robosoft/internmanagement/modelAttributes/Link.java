@@ -1,6 +1,9 @@
 package com.robosoft.internmanagement.modelAttributes;
 
-import lombok.*;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 @Data
 @AllArgsConstructor

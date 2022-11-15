@@ -1,5 +1,6 @@
 package com.robosoft.internmanagement.service;
 
+import org.apache.tomcat.util.http.fileupload.impl.SizeLimitExceededException;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
@@ -20,10 +21,10 @@ public class StorageService {
 
     private final Path root = Paths.get("src\\main\\resources\\static\\documents\\");
 
-    public String singleFileUpload(MultipartFile file, String email, HttpServletRequest request) {
+    public String singleFileUpload(MultipartFile file, String email, HttpServletRequest request) throws Exception {
         String fileUrl = null;
         if (file.isEmpty()) {
-            return "file is empty";
+            throw new Exception("File is empty");
         }
 
         try {
@@ -34,16 +35,13 @@ public class StorageService {
             String CREATED_FOLDER = UPLOADED_FOLDER + email + "\\";
             byte[] bytes = file.getBytes();
             Path path = Paths.get(CREATED_FOLDER  + file.getOriginalFilename());
-            Resource resource = new UrlResource(path.toUri());
-            String contentType = getContentType(request, resource);
             System.out.println(path);
             Files.write(path, bytes);
             fileUrl = generateDocumentUrl(email + "/" + file.getOriginalFilename());
             System.out.println(fileUrl);
-            
 
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException i) {
+            throw new Exception("Errors while uploading file");
         }
 
         return fileUrl;
