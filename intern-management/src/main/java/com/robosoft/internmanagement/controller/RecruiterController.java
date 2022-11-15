@@ -3,6 +3,7 @@ package com.robosoft.internmanagement.controller;
 import com.robosoft.internmanagement.model.*;
 import com.robosoft.internmanagement.service.EmailService;
 import com.robosoft.internmanagement.service.RecruiterService;
+import jdk.jfr.StackTrace;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -84,6 +85,14 @@ public class RecruiterController
     public int updatePositionStatus(@RequestParam String designation, @RequestParam String newStatus){
         return recruiterService.updateStatus(designation, newStatus);
     }
+    @GetMapping("/top-technologies/{designation}")
+    public ResponseEntity<?> getTopTechnologies(@PathVariable String designation) {
+        List<TopTechnologies> technologies = recruiterService.getTopTechnologies(designation);
+        if(technologies.get(0).getLocation().size()==0) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Result not found for "+designation);
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(technologies);
+    }
 
     @GetMapping("/extended-cv/{emailId}")
     public ResponseEntity<?> getExtendedCV(@PathVariable String emailId){
@@ -108,4 +117,9 @@ public class RecruiterController
         return ResponseEntity.ok(url);
     }
 
+    //pagination
+    @GetMapping("/fetch-profile/{designation}/{status}")
+    public ResponseEntity<?> getProfileBasedOnStatus(@PathVariable String designation, @PathVariable String status) {
+        return ResponseEntity.status(HttpStatus.FOUND).body(recruiterService.getProfileBasedOnStatus(designation, status));
+    }
 }

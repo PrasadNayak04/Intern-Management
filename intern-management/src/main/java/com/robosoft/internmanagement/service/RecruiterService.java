@@ -6,13 +6,16 @@ import com.robosoft.internmanagement.modelAttributes.Link;
 import com.robosoft.internmanagement.modelAttributes.WorkHistory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.expression.spel.ast.PropertyOrFieldReference;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -184,6 +187,42 @@ public class RecruiterService
         try{
             return jdbcTemplate.queryForObject(query, String.class, emailId);
         } catch (DataAccessException e) {
+            return null;
+        }
+    }
+
+    public List<TopTechnologies> getTopTechnologies(String designation) {
+        query = "select technologies.designation,location.location from technologies left join location using(designation) left join applications using(designation) where designation != ? group by technologies.designation order by count(applications.designation) desc limit 5";
+        List<TopTechnologies> topTechnologies = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(TopTechnologies.class),designation);
+        List<String> locations = getLocationsByDesignation(designation);
+        int size = locations.size();
+        TopTechnologies technologies = new TopTechnologies(designation,locations);
+        topTechnologies.add(0,technologies);
+        return topTechnologies;
+    }
+
+    public String getLastJobPosition(String emailId) {
+        System.out.println("yo");
+        query = "select position from workHistory where emailId = ? order by fromDate desc";
+        List<String> positions = jdbcTemplate.queryForList(query,String.class,emailId);
+        return positions.get(0);
+    }
+    public List<ProfileAnalysis> getProfileBasedOnStatus(String designation, String status) {
+        query = "select candidateprofile.name,documents.imageUrl,candidateprofile.emailId,candidateprofile.skills from assignboard inner join applications using(applicationId) inner join candidateprofile using(emailId) inner join documents using(emailId) where recruiterEmail = ? and assignboard.status = ? and applications.designation = ?";
+        List<ProfileAnalysis> profileAnalyses = new ArrayList<>();
+        try {
+            return jdbcTemplate.query(query,
+                    (resultSet, no) -> {
+                        ProfileAnalysis profileAnalysis = new ProfileAnalysis();
+                        profileAnalysis.setName(resultSet.getString(1));
+                        profileAnalysis.setImageUrl(resultSet.getString(2));
+                        profileAnalysis.setPosition(getLastJobPosition(resultSet.getString(3)));
+                        profileAnalysis.setSkills(resultSet.getString(4));
+                        profileAnalyses.add(profileAnalysis);
+                        return profileAnalysis;
+                    }, MemberService.getCurrentUser(), status, designation);
+        } catch (DataAccessException e) {
+            e.printStackTrace();
             return null;
         }
     }
