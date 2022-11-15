@@ -87,6 +87,7 @@ public class RecruiterController
 
     @GetMapping("/extended-cv/{emailId}")
     public ResponseEntity<?> getExtendedCV(@PathVariable String emailId){
+        System.out.println("Hi");
         ExtendedCV extendedCV = recruiterService.getBasicCVDetails(emailId);
         if(extendedCV == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No candidate found with email " + emailId);

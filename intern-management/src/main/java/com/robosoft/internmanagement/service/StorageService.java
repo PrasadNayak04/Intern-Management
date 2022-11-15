@@ -2,8 +2,6 @@ package com.robosoft.internmanagement.service;
 
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -11,7 +9,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.nio.channels.MulticastChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,7 +32,6 @@ public class StorageService {
                 newDirectory.mkdir();
             }
             String CREATED_FOLDER = UPLOADED_FOLDER + email + "\\";
-            // Get the file and save it somewhere
             byte[] bytes = file.getBytes();
             Path path = Paths.get(CREATED_FOLDER  + file.getOriginalFilename());
             Resource resource = new UrlResource(path.toUri());
@@ -54,14 +50,13 @@ public class StorageService {
     }
 
     public String generateDocumentUrl(String fileName){
-        final String apiUrl = "http://localhost:8080/intern-management/fetch/";
+        final String apiUrl = "http://localhost:8080/intern-management/member/fetch/";
         return apiUrl + fileName;
     }
 
     public Resource load(String filename) {
 
         System.out.println("src\\main\\resources\\static\\documents\\".length());
-        //String file;
         try {
             Path file = root.resolve(filename);
             Resource resource = new UrlResource(file.toUri());
@@ -85,7 +80,6 @@ public class StorageService {
             System.out.println("Could not determine file type.");
         }
 
-        // Fallback to the default content type if type could not be determined
         if (contentType == null) {
             contentType = "application/octet-stream";
         }

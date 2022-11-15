@@ -1,10 +1,7 @@
 package com.robosoft.internmanagement.service;
 
-import com.robosoft.internmanagement.model.ExtendedCV;
 import com.robosoft.internmanagement.modelAttributes.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -83,7 +80,6 @@ public class CandidateService {
                 e1.printStackTrace();
                 delCandidateQuery(candidateProfile.getEmailId(), date);
                 return "Save failed";
-                //delete local photo query needed
             }
 
             return "Candidate saved successfully";

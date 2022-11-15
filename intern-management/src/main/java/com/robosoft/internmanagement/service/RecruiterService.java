@@ -143,9 +143,9 @@ public class RecruiterService
     }
 
     public ExtendedCV getBasicCVDetails(String emailId){
-        query = "select name, dob, mobileNumber, jobLocation, position, expYear, expMonth, candidateType, contactPerson, languagesKnown, softwaresWorked, skills, about, expectedCTC, attachmentUrl, imageUrl from CandidateProfile, documents where CandidateProfile.emailId = documents.emailId and documents.emailId = ?";
         try{
-            return jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(ExtendedCV.class), emailId);
+            query = "select name, dob, mobileNumber, CandidateProfile.emailId, jobLocation, position, expYear, expMonth, candidateType, contactPerson, languagesKnown, softwaresWorked, skills, about, expectedCTC, attachmentUrl, imageUrl from CandidateProfile inner join documents using(EmailId) inner join  applications  using(emailId) inner join assignboard using(applicationId)  where assignboard.recruiterEmail= ?  and  documents.emailId = ?";
+            return jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(ExtendedCV.class), MemberService.getCurrentUser(), emailId);
         } catch (DataAccessException e) {
             e.printStackTrace();
             return null;
