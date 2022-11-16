@@ -3,6 +3,7 @@ package com.robosoft.internmanagement.controller;
 import com.robosoft.internmanagement.model.*;
 import com.robosoft.internmanagement.modelAttributes.Applications;
 import com.robosoft.internmanagement.modelAttributes.AssignBoard;
+import com.robosoft.internmanagement.modelAttributes.CandidateInvites;
 import com.robosoft.internmanagement.service.EmailService;
 import com.robosoft.internmanagement.service.MemberService;
 import com.robosoft.internmanagement.service.RecruiterService;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 public class RecruiterController
@@ -33,6 +35,18 @@ public class RecruiterController
         }
     }
 
+    @GetMapping("/invite")
+    public ResponseEntity<String> invites(@ModelAttribute CandidateInvites invites)
+    {
+        boolean result = emailService.sendInviteEmail(invites);
+
+        if (result){
+            return ResponseEntity.ok().body("Invite sent to " + invites.getCandidateName());
+        }else {
+            return ResponseEntity.status(HttpStatus.valueOf("Insufficient information")).build();
+        }
+    }
+
     @PutMapping("/verify-otp")
     public String verify(@RequestParam String emailId,@RequestParam String otp)
     {
@@ -40,9 +54,14 @@ public class RecruiterController
     }
 
     @GetMapping("/organizer")
-    public List<Organizer> getList()
+    public ResponseEntity<List<Organizer>> getList()
     {
-        return recruiterService.getOrganizer();
+        List<Organizer> list = recruiterService.getOrganizer();
+        if(list == null)
+        {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }else
+            return ResponseEntity.of(Optional.of(list));
     }
 
     @GetMapping("/summary")
@@ -88,10 +107,25 @@ public class RecruiterController
     }
 
     @PutMapping("/assign-organizer")
-    public String setOrganizer(@ModelAttribute AssignBoard assignBoard)
+    public ResponseEntity<String> setOrganizer(@ModelAttribute AssignBoard assignBoard)
     {
-        System.out.println(MemberService.getCurrentUser());
-        return recruiterService.assignOrganizer(assignBoard);
+        String result = recruiterService.assignOrganizer(assignBoard);
+        if(result==null)
+        {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }else
+            return ResponseEntity.of(Optional.of(result));
     }
 
+    @GetMapping("/get-assignboard")
+    public List<AssignBoardPage> getPage()
+    {
+        return recruiterService.getAssignBoardPage();
+    }
+
+    @GetMapping("/rejected-cv")
+    public List<RejectedCv> getCvPage()
+    {
+        return recruiterService.getRejectedCvPage();
+    }
 }

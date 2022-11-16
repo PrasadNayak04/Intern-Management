@@ -5,7 +5,9 @@ import lombok.Data;
 @Data
 public class Organizer
 {
+
     private String name;
-    private String profile;
+    private String photoUrl;
     private int interviews;
+
 }
