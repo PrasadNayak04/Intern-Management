@@ -53,8 +53,8 @@ public class MemberService {
         memberProfile.setPassword(encodePassword(memberProfile.getPassword()));
         try{
 
-            query = "insert into member(emailId, password) values(?,?)";
-            jdbcTemplate.update(query, memberProfile.getEmailId(), memberProfile.getPassword());
+            query = "insert into member(emailId, password, role) values(?,?,?)";
+            jdbcTemplate.update(query, memberProfile.getEmailId(), memberProfile.getPassword(), "ROLE_" + memberProfile.getPosition().toUpperCase());
 
             query = "insert into memberProfile(name, emailId, mobileNumber, designation, position) values (?,?,?,?,?)";
             jdbcTemplate.update(query, memberProfile.getName(), memberProfile.getEmailId(), memberProfile.getMobileNumber(), memberProfile.getDesignation(), memberProfile.getPosition());
