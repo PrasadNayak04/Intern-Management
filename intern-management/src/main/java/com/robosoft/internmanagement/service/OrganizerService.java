@@ -1,6 +1,5 @@
 package com.robosoft.internmanagement.service;
 
-
 import com.robosoft.internmanagement.modelAttributes.AssignBoard;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -28,4 +27,5 @@ public class OrganizerService
         }
         return "Interview Completed Successfully";
     }
+
 }
