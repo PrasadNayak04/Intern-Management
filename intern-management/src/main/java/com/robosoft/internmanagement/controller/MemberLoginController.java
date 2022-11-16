@@ -67,7 +67,7 @@ public class MemberLoginController {
         if(mailSent){
             return ResponseEntity.ok().body("Otp has been sent to the email \"" + toEmail + "\"");
         }else{
-            return ResponseEntity.status(HttpStatus.valueOf("Please provide valid email.")).build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Please provide valid email");
         }
     }
 

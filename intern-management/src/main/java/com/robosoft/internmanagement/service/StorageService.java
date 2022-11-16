@@ -35,9 +35,10 @@ public class StorageService {
             String CREATED_FOLDER = UPLOADED_FOLDER + email + "\\";
             byte[] bytes = file.getBytes();
             Path path = Paths.get(CREATED_FOLDER  + file.getOriginalFilename());
-            System.out.println(path);
             Files.write(path, bytes);
-            fileUrl = generateDocumentUrl(email + "/" + file.getOriginalFilename());
+            String fileName = file.getOriginalFilename().replaceAll(" ","-");
+            System.out.println(fileName);
+            fileUrl = generateDocumentUrl(email + "/" + fileName);
             System.out.println(fileUrl);
 
         } catch (IOException i) {

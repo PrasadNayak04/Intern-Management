@@ -57,43 +57,42 @@ public class EmailService {
             String OTP=String.valueOf(otp);
             try
             {
-                jdbcTemplate.queryForObject("select otp from user where emailId=?", String.class,toEmail);
-                jdbcTemplate.update("update user set otp=?,expireTime=? where emailId=?",OTP,(System.currentTimeMillis()/1000)+120,toEmail);
+                jdbcTemplate.queryForObject("select emailId from forgotPassword where emailId=?", String.class,toEmail);
+                jdbcTemplate.update("update forgotPassword set otp=?,expireTime=? where emailId=?",OTP,(System.currentTimeMillis()/1000)+120,toEmail);
+                return flag = true;
             }
             catch (Exception e)
             {
-                insert(toEmail,OTP);
+                return flag = insert(toEmail,OTP);
             }
-            flag = true;
 
         }
         catch (Exception e)
         {
-            e.printStackTrace();
-        }
-
-        finally
-        {
-            return flag;
+            return false;
         }
 
     }
 
-    public void insert(String emailId,String code)
+    public boolean insert(String emailId,String code)
     {
-        jdbcTemplate.update("insert into forgotPassword values (?,?,?,?)",emailId,null,code,(System.currentTimeMillis()/1000)+120);
+        try{
+            jdbcTemplate.update("insert into forgotPassword values (?,?,?)",emailId,code,(System.currentTimeMillis()/1000)+120);
+            return true;
+        }catch (Exception e){
+            return false;
+        }
     }
 
 
     public String verification(String emailId,String otp)
     {
-        String verify=jdbcTemplate.queryForObject("select otp from forgotPassword where emailId=?", String.class,emailId);
-        System.out.println(verify);
-        System.out.println(otp);
-        if(otp.equals(verify))
-        {
-            return "Done";
-        }
+            String verify = jdbcTemplate.queryForObject("select otp from forgotPassword where emailId=?", String.class, emailId);
+            System.out.println(verify);
+            System.out.println(otp);
+            if (otp.equals(verify)) {
+                return "Done";
+            }
         return "Invalid OTP";
     }
 
