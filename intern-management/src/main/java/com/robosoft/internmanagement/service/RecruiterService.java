@@ -24,17 +24,18 @@ public class RecruiterService
 
     String query;
 
-    public List<Organizer> getOrganizer(String emailId)
+    public List<Organizer> getOrganizer()
     {
+        String status = "new";
         List<Organizer> organizerList = new ArrayList<>();
-        query = "select memberProfile.name, memberProfile.emailId, memberProfile.photoPath from memberProfile, AssignBoard where memberProfile.emailId = AssignBoard.organizerEmail and assignBoard.recruiterEmail = '" + emailId + "'";
+        query = "select memberProfile.name, memberProfile.emailId, memberProfile.photoUrl from memberProfile inner join AssignBoard on memberProfile.emailId = AssignBoard.organizerEmail where assignBoard.recruiterEmail = '" +MemberService.getCurrentUser()+ "' and assignBoard.status='" + status + "' group by assignBoard.recruiterEmail";
 
         jdbcTemplate.query(query,
                 (resultSet, no) -> {
                     Organizer organizer = new Organizer();
                     organizer.setName(resultSet.getString(1));
                     organizer.setProfile(resultSet.getString(3));
-                    organizer.setInterviews(getInterviewsCount(resultSet.getString(2), emailId));
+                    organizer.setInterviews(getInterviewsCount(resultSet.getString(2), MemberService.getCurrentUser()));
                     organizerList.add(organizer);
                     return organizer;
                 });
@@ -236,7 +237,8 @@ public class RecruiterService
         try {
             query = "select name from memberProfile where emailId=? and position=?";
             jdbcTemplate.queryForObject(query, String.class,assignBoard.getOrganizerEmail(),"Organizer");
-
+            query = "select applicationId from assignBoard where recruiterEmail=? and applicationId=?";
+            jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser(),assignBoard.getApplicationId());
             try {
                 query = "update assignBoard set organizerEmail =?, assignDate=curDate() where recruiterEmail=? and applicationId=?";
                 jdbcTemplate.update(query,assignBoard.getOrganizerEmail(),MemberService.getCurrentUser(),assignBoard.getApplicationId());
@@ -247,7 +249,7 @@ public class RecruiterService
                 return "Give correct information";
             }
         } catch (Exception e) {
-            return "Select correct Organizer to assign";
+            return "Select correct Recruiter/Organizer to assign";
         }
     }
 
@@ -259,8 +261,8 @@ public class RecruiterService
 
     public List<RejectedCv> getRejectedCvPage()
     {
-        query = "select candidateProfile.name,documents.ImageUrl,applications.designation,applications.location,candidateProfile.mobileNumber from documents inner join candidateProfile on documents.emailId=candidateProfile.emailId inner join applications on candidateProfile.emailId=applications.emailId inner join assignBoard on applications.applicationId=assignBoard.applicationId where assignBoard.status=?";
-        return jdbcTemplate.query(query,new BeanPropertyRowMapper<>(RejectedCv.class),"Rejected");
+        query = "select candidateProfile.name,documents.ImageUrl,applications.designation,applications.location,candidateProfile.mobileNumber from documents inner join candidateProfile on documents.emailId=candidateProfile.emailId inner join applications on candidateProfile.emailId=applications.emailId inner join assignBoard on applications.applicationId=assignBoard.applicationId where assignBoard.status=? and assignBoard.recruiterEmail=?";
+        return jdbcTemplate.query(query,new BeanPropertyRowMapper<>(RejectedCv.class),"Rejected",MemberService.getCurrentUser());
     }
 
 }

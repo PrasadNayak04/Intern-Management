@@ -38,9 +38,9 @@ public class RecruiterController
     }
 
     @GetMapping("/organizers")
-    public List<Organizer> getList(@RequestParam String emailId)
+    public List<Organizer> getList()
     {
-        return recruiterService.getOrganizer(emailId);
+        return recruiterService.getOrganizer();
     }
 
     @GetMapping("/summary")
