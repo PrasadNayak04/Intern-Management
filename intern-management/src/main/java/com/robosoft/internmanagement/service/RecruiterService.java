@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.sql.Date;
+import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -201,7 +202,6 @@ public class RecruiterService
     }
 
     public String getLastJobPosition(String emailId) {
-        System.out.println("yo");
         query = "select position from workHistory where emailId = ? order by fromDate desc";
         List<String> positions = jdbcTemplate.queryForList(query,String.class,emailId);
         return positions.get(0);
@@ -261,8 +261,68 @@ public class RecruiterService
 
     public List<RejectedCv> getRejectedCvPage()
     {
-        query = "select candidateProfile.name,documents.ImageUrl,applications.designation,applications.location,candidateProfile.mobileNumber from documents inner join candidateProfile on documents.emailId=candidateProfile.emailId inner join applications on candidateProfile.emailId=applications.emailId inner join assignBoard on applications.applicationId=assignBoard.applicationId where assignBoard.status=? and assignBoard.recruiterEmail=?";
-        return jdbcTemplate.query(query,new BeanPropertyRowMapper<>(RejectedCv.class),"Rejected",MemberService.getCurrentUser());
+        query = "select candidateProfile.name,documents.ImageUrl,candidateProfile.emailId,applications.location,candidateProfile.mobileNumber from documents inner join candidateProfile on documents.emailId=candidateProfile.emailId inner join applications on candidateProfile.emailId=applications.emailId inner join assignBoard on applications.applicationId=assignBoard.applicationId where assignBoard.status=? and assignBoard.recruiterEmail=?";
+        List<RejectedCv> rejectedCvList = new ArrayList<>();
+        try {
+            return jdbcTemplate.query(query,
+                    (resultSet,no) -> {
+                        RejectedCv list = new RejectedCv();
+                        list.setName(resultSet.getString(1));
+                        list.setImageUrl(resultSet.getString(2));
+                        list.setDesignation(getLastJobPosition(resultSet.getString(3)));
+                        list.setLocation(resultSet.getString(4));
+                        list.setMobileNumber(resultSet.getLong(5));
+                        rejectedCvList.add(list);
+                        return list;
+                    },"Rejected",MemberService.getCurrentUser());
+        }catch (Exception e)
+        {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+    public Invite getInviteInfo()
+    {
+        Invite invite=new Invite();
+        query = "select count(*) from candidateInvites where date=curDate() and fromEmail=?";
+        invite.setToday(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
+
+        query = "select count(*) from candidateInvites where date=DATE_SUB(curDATE(),INTERVAL 1 DAY) and fromEmail=?";
+        invite.setYesterday(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
+
+        query = "select count(*) from candidateInvites where month(date)=month(curDate())-1 and year(date)=year(curDate()) and fromEmail=?";
+        invite.setPastMonth(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
+
+        query = "select count(*) from candidateInvites where month(date)=month(curDate())-2 and year(date)=year(curDate()) and fromEmail=?";
+        invite.setTwoMonthBack(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
+
+        query = "select count(*) from candidateInvites where year(date)=year(curDate())-1 and fromEmail=?";
+        invite.setPassYear(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
+
+        query = "select count(*) from candidateInvites where year(date)=year(curDate())-2 and fromEmail=?";
+        invite.setTwoYearBack(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
+
+        return invite;
+    }
+
+    public List<SentInvites> getByDay(Date date)
+    {
+        query = "select candidateName as name,designation,location,CandidateEmail as email from candidateInvites where date=? and fromEmail=?";
+        return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvites.class),date,MemberService.getCurrentUser());
+    }
+
+    public List<SentInvites> getByMonth(Date date)
+    {
+        query = "select candidateName as name,designation,location,CandidateEmail as email from candidateInvites where month(date)=? and year(date)=? and fromEmail=?";
+        return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvites.class), date.toLocalDate().getMonthValue(),date.toLocalDate().getYear(),MemberService.getCurrentUser());
+    }
+
+    public List<SentInvites> getByYear(Date date)
+    {
+        query = "select candidateName as name,designation,location,CandidateEmail as email from candidateInvites where year(date)=? and fromEmail=?";
+        return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvites.class),date.toLocalDate().getYear(),MemberService.getCurrentUser());
     }
 
 }

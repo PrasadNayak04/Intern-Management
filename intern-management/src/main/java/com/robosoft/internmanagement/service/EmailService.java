@@ -3,6 +3,7 @@ package com.robosoft.internmanagement.service;
 import com.robosoft.internmanagement.modelAttributes.CandidateInvites;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -98,13 +99,10 @@ public class EmailService {
 
     public boolean sendInviteEmail(CandidateInvites invites)
     {
-
         boolean flag = false;
 
         String host = "smtp.gmail.com";
         String subject = "Invite from Robosoft Technologies";
-
-
         String message = "Inviting to join us as a intern.";
 
         try
@@ -123,24 +121,59 @@ public class EmailService {
                 LocalDate date = LocalDate.now();
                 String query = "insert into candidateInvites(fromEmail,candidateName,designation,mobileNumber,location,jobDetails,candidateEmail,date) values(?,?,?,?,?,?,?,?)";
                 jdbcTemplate.update(query,MemberService.getCurrentUser(),invites.getCandidateName(),invites.getDesignation(),invites.getMobileNumber(),invites.getLocation(),invites.getJobDetails(),invites.getCandidateEmail(),date);
-
+                return true;
             }
             catch (Exception e)
             {
-                flag = false;
+                return false;
             }
-            flag = true;
 
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            return false;
         }
+    }
 
-        finally
+    public boolean reSentInvite(int inviteId)
+    {
+        boolean flag = false;
+
+        String host = "smtp.gmail.com";
+        String subject = "Invite from Robosoft Technologies";
+        String message = "Inviting to join us as a intern.";
+
+        String query = "select * from candidateInvites where candidateInviteId=?";
+        CandidateInvites invites = jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(CandidateInvites.class), inviteId);
+        try
         {
-            return flag;
-        }
 
+            SimpleMailMessage mailMessage = new SimpleMailMessage();
+
+            mailMessage.setFrom(MemberService.getCurrentUser());
+            mailMessage.setTo(invites.getCandidateEmail());
+            mailMessage.setSubject(subject);
+            mailMessage.setText(message);
+
+            javaMailSender.send(mailMessage);
+            try {
+                LocalDate date = LocalDate.now();
+                String inviteQuery = "insert into candidateInvites(fromEmail,candidateName,designation,mobileNumber,location,jobDetails,candidateEmail,date) values(?,?,?,?,?,?,?,?)";
+                jdbcTemplate.update(inviteQuery, MemberService.getCurrentUser(), invites.getCandidateName(), invites.getDesignation(), invites.getMobileNumber(), invites.getLocation(), invites.getJobDetails(), invites.getCandidateEmail(), date);
+                System.out.println("yy");
+                String softDelete = "update candidateInvites set deleted = 1 where candidateInviteId= ?";
+                jdbcTemplate.update(softDelete, inviteId);
+                System.out.println("hii");
+                return true;
+            }catch (Exception e1)
+            {
+                e1.printStackTrace();
+                return false;
+            }
+        }catch (Exception e)
+        {
+            e.printStackTrace();
+            return false;
+        }
     }
 }
