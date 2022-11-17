@@ -23,6 +23,4 @@ public class CandidateController {
         return candidateService.candidateRegister(candidateProfile,request);
     }
 
-
-
 }

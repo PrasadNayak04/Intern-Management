@@ -1,4 +1,4 @@
-package com.robosoft.internmanagement.service.JwtSecurity;
+package com.robosoft.internmanagement.service.jwtSecurity;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

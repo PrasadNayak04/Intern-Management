@@ -25,7 +25,7 @@ public class RecruiterController
     @Autowired
     RecruiterService recruiterService;
 
-    @GetMapping("/candidate-invitation")
+    @PostMapping("/candidate-invitation")
     public ResponseEntity<String> invites(@ModelAttribute CandidateInvites invites)
     {
         boolean result = emailService.sendInviteEmail(invites);

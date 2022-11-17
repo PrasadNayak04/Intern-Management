@@ -21,7 +21,7 @@ public class AuthorityService
 
     public List<Applications> getApplicants()
     {
-        query = "select applicationId,emailId,designation,location,date from applications where applicationId NOT IN (select applicationId from assignBoard)";
+        query = "select applicationId,emailId,designation,location,date from applications where applicationId NOT IN (select applicationId from assignBoard assignBoard.deleted = 0) and applications.deleted = 0";
         return jdbcTemplate.query(query,new BeanPropertyRowMapper<>(Applications.class));
     }
 

@@ -27,8 +27,7 @@ public class RecruiterService
     public List<Organizer> getOrganizer(String emailId)
     {
         List<Organizer> organizerList = new ArrayList<>();
-        query = "select memberProfile.name, memberProfile.emailId, memberProfile.photoPath from memberProfile, AssignBoard where memberProfile.emailId = AssignBoard.organizerEmail and assignBoard.recruiterEmail = '" + emailId + "'";
-
+        query = "select memberProfile.name, memberProfile.emailId, memberProfile.photoPath from memberProfile, AssignBoard where memberProfile.emailId = AssignBoard.organizerEmail and assignBoard.recruiterEmail = '" + emailId + "' and deleted = 0";
         jdbcTemplate.query(query,
                 (resultSet, no) -> {
                     Organizer organizer = new Organizer();
@@ -49,13 +48,13 @@ public class RecruiterService
     public Summary getSummary()
     {
         Summary summary = new Summary();
-        query = "select count(*) from assignBoard where year(AssignDate)=year(curDate()) and month(assignDate)=month(curDate()) and status = ? and recruiterEmail=?";
+        query = "select count(*) from assignBoard where year(AssignDate)=year(curDate()) and month(assignDate)=month(curDate()) and status = ? and recruiterEmail=? and deleted = 0";
         int shortlisted = jdbcTemplate.queryForObject(query, Integer.class,"Shortlisted",MemberService.getCurrentUser());
         summary.setShortlisted(shortlisted);
-        query = "select count(*) from assignBoard where year(assignDate)=year(curDate()) and month(assignDate)=month(curDate()) and status=? and recruiterEmail=?";
+        query = "select count(*) from assignBoard where year(assignDate)=year(curDate()) and month(assignDate)=month(curDate()) and status=? and recruiterEmail=? and deleted = 0";
         int onHold = jdbcTemplate.queryForObject(query, Integer.class,"New",MemberService.getCurrentUser());
         summary.setOnHold(onHold);
-        query = "select count(*) from assignBoard where year(assignDate)=year(curDate()) and month(assignDate)=month(curDate()) and status=? and recruiterEmail=?";
+        query = "select count(*) from assignBoard where year(assignDate)=year(curDate()) and month(assignDate)=month(curDate()) and status=? and recruiterEmail=? and deleted = 0";
         int rejected = jdbcTemplate.queryForObject(query, Integer.class,"Rejected",MemberService.getCurrentUser());
         summary.setRejected(rejected);
         int applications=shortlisted + onHold + rejected;
@@ -65,7 +64,7 @@ public class RecruiterService
 
     public int cvCount()
     {
-        query = "select count(applicationId) from assignBoard where recruiterEmail=? and organizerEmail is null";
+        query = "select count(applicationId) from assignBoard where recruiterEmail=? and organizerEmail is null and deleted = 0";
         return jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser());
     }
 
