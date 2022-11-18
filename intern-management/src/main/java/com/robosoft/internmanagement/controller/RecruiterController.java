@@ -44,9 +44,9 @@ public class RecruiterController
     }
 
     @GetMapping("/summary")
-    public Summary getSummary()
+    public Summary getSummary(@RequestParam Date date)
     {
-        return recruiterService.getSummary();
+        return recruiterService.getSummary(date);
     }
 
     @GetMapping("/cv-count")

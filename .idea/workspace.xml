@@ -5,22 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3612ead5-c0e6-4b02-90be-a16093e26f33" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/controller/OrganizerController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/model/AssignBoardPage.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/model/RejectedCv.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/modelAttributes/CandidateInvites.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/controller/RecruiterController.java" beforeDir="false" afterPath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/controller/RecruiterController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/model/CvAnalysis.java" beforeDir="false" afterPath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/model/CvAnalysis.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/model/LoggedProfile.java" beforeDir="false" afterPath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/model/LoggedProfile.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/model/NotificationDisplay.java" beforeDir="false" afterPath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/model/NotificationDisplay.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/model/Organizer.java" beforeDir="false" afterPath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/model/Organizer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/model/Summary.java" beforeDir="false" afterPath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/model/Summary.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/modelAttributes/Applications.java" beforeDir="false" afterPath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/modelAttributes/Applications.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/service/EmailService.java" beforeDir="false" afterPath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/service/EmailService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/service/JwtSecurity/WebSecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/service/JwtSecurity/WebSecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/service/OrganizerService.java" beforeDir="false" afterPath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/service/OrganizerService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/service/RecruiterService.java" beforeDir="false" afterPath="$PROJECT_DIR$/intern-management/src/main/java/com/robosoft/internmanagement/service/RecruiterService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/intern-management/target/classes/com/robosoft/internmanagement/service/EmailService.class" beforeDir="false" afterPath="$PROJECT_DIR$/intern-management/target/classes/com/robosoft/internmanagement/service/EmailService.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/jpa-buddy.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -53,13 +41,13 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "last_opened_file_path": "C:/Users/Shrusti CJ/IdeaProjects"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Shrusti CJ/IdeaProjects&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration name="InternManagementApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.robosoft.internmanagement.InternManagementApplication" />

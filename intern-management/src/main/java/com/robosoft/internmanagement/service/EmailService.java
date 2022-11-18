@@ -160,19 +160,15 @@ public class EmailService {
                 LocalDate date = LocalDate.now();
                 String inviteQuery = "insert into candidateInvites(fromEmail,candidateName,designation,mobileNumber,location,jobDetails,candidateEmail,date) values(?,?,?,?,?,?,?,?)";
                 jdbcTemplate.update(inviteQuery, MemberService.getCurrentUser(), invites.getCandidateName(), invites.getDesignation(), invites.getMobileNumber(), invites.getLocation(), invites.getJobDetails(), invites.getCandidateEmail(), date);
-                System.out.println("yy");
                 String softDelete = "update candidateInvites set deleted = 1 where candidateInviteId= ?";
                 jdbcTemplate.update(softDelete, inviteId);
-                System.out.println("hii");
                 return true;
             }catch (Exception e1)
             {
-                e1.printStackTrace();
                 return false;
             }
         }catch (Exception e)
         {
-            e.printStackTrace();
             return false;
         }
     }
