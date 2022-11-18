@@ -51,13 +51,12 @@ public class RecruiterService
         query = "select count(*) from assignBoard where year(AssignDate)=year(curDate()) and month(assignDate)=month(curDate()) and status = ? and recruiterEmail=? and deleted = 0";
         int shortlisted = jdbcTemplate.queryForObject(query, Integer.class,"Shortlisted",MemberService.getCurrentUser());
         summary.setShortlisted(shortlisted);
-        query = "select count(*) from assignBoard where year(assignDate)=year(curDate()) and month(assignDate)=month(curDate()) and status=? and recruiterEmail=? and deleted = 0";
         int onHold = jdbcTemplate.queryForObject(query, Integer.class,"New",MemberService.getCurrentUser());
         summary.setOnHold(onHold);
-        query = "select count(*) from assignBoard where year(assignDate)=year(curDate()) and month(assignDate)=month(curDate()) and status=? and recruiterEmail=? and deleted = 0";
         int rejected = jdbcTemplate.queryForObject(query, Integer.class,"Rejected",MemberService.getCurrentUser());
         summary.setRejected(rejected);
-        int applications=shortlisted + onHold + rejected;
+        int assigned = jdbcTemplate.queryForObject(query, Integer.class,"Assigned",MemberService.getCurrentUser());
+        int applications=shortlisted + onHold + rejected + assigned;
         summary.setApplications(applications);
         return summary;
     }
@@ -75,11 +74,11 @@ public class RecruiterService
     }
 
     public NotificationDisplay notification() {
-        String notification = "select message from notifications where emailId=? limit 1";
-        String notificationType = jdbcTemplate.queryForObject("select type from notifications where emailId=? limit 1", String.class, MemberService.getCurrentUser());
-        int eventId = jdbcTemplate.queryForObject("select eventId from notifications where emailId=? limit 1", Integer.class, MemberService.getCurrentUser());
+        String notification = "select message from notifications where emailId=? and deleted = 0 limit 1";
+        String notificationType = jdbcTemplate.queryForObject("select type from notifications where emailId=? and deleted = 0 limit 1", String.class, MemberService.getCurrentUser());
+        int eventId = jdbcTemplate.queryForObject("select eventId from notifications where emailId=? and deleted = 0 limit 1", Integer.class, MemberService.getCurrentUser());
         if (notificationType.equalsIgnoreCase("Invite")) {
-            String profileImage = "select photoPath from memberProfile,notifications,events,eventInvites where notifications.emailId=events.creatorEmail and events.eventId=eventInvites.eventId and eventInvites.invitedEmail=memberProfile.emailId and notifications.emailId=? and notifications.eventId=?";
+            String profileImage = "select photoPath from memberProfile,notifications,events,eventInvites where notifications.emailId=events.creatorEmail and events.eventId=eventInvites.eventId and eventInvites.invitedEmail=memberProfile.emailId and notifications.emailId=? and notifications.eventId=? and memberProfile.deleted = 0 and Notifications.deleted = 0 events.deleted = 0 eventInvites.deleted = 0";
             List<String> Images = jdbcTemplate.query(profileImage, new BeanPropertyRowMapper<>(String.class),MemberService.getCurrentUser(), eventId);
             NotificationDisplay display = jdbcTemplate.queryForObject(notification, new BeanPropertyRowMapper<>(NotificationDisplay.class), MemberService.getCurrentUser());
             display.setImages(Images);
@@ -96,7 +95,7 @@ public class RecruiterService
         if(date == null){
             date = Date.valueOf(LocalDate.now());
         }
-        query = "select applications.designation,count(applications.designation),date,status from applications,technologies where applications.designation = technologies.designation and date=? group by designation";
+        query = "select applications.designation,count(applications.designation),date,status from applications,technologies where applications.designation = technologies.designation and date=? and applications.deleted = 0 and technologies.deleted = 0 group by designation";
         jdbcTemplate.query(query,
                 (resultSet, no) -> {
                     CvAnalysis cvAnalysis = new CvAnalysis();
@@ -115,7 +114,7 @@ public class RecruiterService
 
     public CvAnalysis searchDesignation(String designation)
     {
-        query  = "select applications.designation,count(applications.designation),date,status from applications,technologies where applications.designation = technologies.designation and applications.designation=? group by applications.designation";
+        query  = "select applications.designation,count(applications.designation),date,status from applications,technologies where applications.designation = technologies.designation and applications.designation=? and applications.deleted = 0 and technologies.deleted = 0 group by applications.designation";
         try {
             return jdbcTemplate.queryForObject(query,
                     (resultSet, no) -> {
@@ -133,92 +132,92 @@ public class RecruiterService
     }
 
     public int updateStatus(String designation, String newStatus){
-        query = "update Technologies set status = ? where designation = ?";
+        query = "update Technologies set status = ? where designation = ? and deleted = 0";
         return jdbcTemplate.update(query, newStatus, designation);
     }
 
     public List<String> getLocationsByDesignation(String designation){
-        query = "select location from location where designation = ?";
+        query = "select location from location where designation = ? and deleted = 0";
         return jdbcTemplate.queryForList(query, String.class, designation);
     }
 
-    public ExtendedCV getBasicCVDetails(String emailId){
+    public ExtendedCV getBasicCVDetails(int applicationId){
         try{
-            query = "select name, dob, mobileNumber, CandidateProfile.emailId, jobLocation, position, expYear, expMonth, candidateType, contactPerson, languagesKnown, softwaresWorked, skills, about, expectedCTC, attachmentUrl, imageUrl from CandidateProfile inner join documents using(EmailId) inner join  applications  using(emailId) inner join assignboard using(applicationId)  where assignboard.recruiterEmail= ?  and  documents.emailId = ?";
-            return jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(ExtendedCV.class), MemberService.getCurrentUser(), emailId);
-        } catch (DataAccessException e) {
-            e.printStackTrace();
+            query = "select " + applicationId + " as applicationId, name, dob, mobileNumber, CandidateProfile.emailId, jobLocation, position, expYear, expMonth, candidateType, contactPerson, languagesKnown, softwaresWorked, skills, about, expectedCTC, attachmentUrl, imageUrl from CandidateProfile inner join documents using(date) inner join applications using(date) inner join assignboard using(applicationId)  where assignboard.recruiterEmail= ? and applications.applicationId = ? and CandidateProfile.deleted = 0 and documents.deleted = 0 and Applications.deleted = 0 and AssignBoard.deleted = 0";
+            return jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(ExtendedCV.class), MemberService.getCurrentUser(), applicationId);
+        } catch (Exception e) {
             return null;
         }
     }
 
-    public List<Education> getEducationsHistory(String emailId){
-        query = "select * from Education where emailId = ?";
+    public List<Education> getEducationsHistory(int applicationId){
+        query = "select * from Education inner join applications using(date) where applicationId = ? and applications.deleted = 0 and education.deleted = 0";
         try {
-            return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(Education.class), emailId);
-        } catch (DataAccessException e) {
+            return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(Education.class), applicationId);
+        } catch (Exception e) {
             return null;
         }
     }
 
-    public List<WorkHistory> getWorkHistory(String emailId){
-        query = "select * from WorkHistory where emailId = ?";
+    public List<WorkHistory> getWorkHistory(int applicationId){
+        query = "select * from WorkHistory inner join applications using(date) where applicationId = ? and applications.deleted = 0 and workHistory.deleted = 0";
         try{
-            return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(WorkHistory.class), emailId);
-        } catch (DataAccessException e) {
+            return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(WorkHistory.class), applicationId);
+        } catch (Exception e) {
             return null;
         }
     }
 
-    public List<Link> getSocialLinks(String emailId){
-        query = "select * from Links where emailId = ?";
+    public List<Link> getSocialLinks(int applicationId){
+        query = "select * from Links inner join applications using(date) where applicationId = ? and applications.deleted = 0 and Links.deleted = 0";
         try{
-            return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(Link.class), emailId);
-        } catch (DataAccessException e) {
+            return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(Link.class), applicationId);
+        } catch (Exception e) {
             return null;
         }
     }
 
-    public String downloadCV(String emailId){
-        query = "select attachmentUrl from documents where emailId = ?";
+    public String downloadCV(int applicationId){
+        query = "select attachmentUrl from documents inner join applications using(date) where applicationId = ? and applications.deleted = 0 and documents.deleted = 0";
         try{
-            return jdbcTemplate.queryForObject(query, String.class, emailId);
+            return jdbcTemplate.queryForObject(query, String.class, applicationId);
         } catch (DataAccessException e) {
             return null;
         }
     }
 
     public List<TopTechnologies> getTopTechnologies(String designation) {
-        query = "select technologies.designation,location.location from technologies left join location using(designation) left join applications using(designation) where designation != ? group by technologies.designation order by count(applications.designation) desc limit 5";
+        query = "select technologies.designation,location.location from technologies left join location using(designation) left join applications using(designation) where designation != ? and Technologies.deleted = 0 and Location.deleted = 0 and Applications.deleted = 0 group by technologies.designation order by count(applications.designation) desc limit 5";
         List<TopTechnologies> topTechnologies = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(TopTechnologies.class),designation);
         List<String> locations = getLocationsByDesignation(designation);
-        int size = locations.size();
         TopTechnologies technologies = new TopTechnologies(designation,locations);
         topTechnologies.add(0,technologies);
         return topTechnologies;
     }
 
-    public String getLastJobPosition(String emailId) {
+    public String getLastJobPosition(int applicationId) {
         System.out.println("yo");
-        query = "select position from workHistory where emailId = ? order by fromDate desc";
-        List<String> positions = jdbcTemplate.queryForList(query,String.class,emailId);
+        query = "select position from workHistory inner join applications using(date) where date = (select date from applications where applicationId = ?) order by fromDate desc";
+        List<String> positions = jdbcTemplate.queryForList(query,String.class,applicationId);
         return positions.get(0);
     }
     public List<ProfileAnalysis> getProfileBasedOnStatus(String designation, String status) {
-        query = "select candidateprofile.name,documents.imageUrl,candidateprofile.emailId,candidateprofile.skills from assignboard inner join applications using(applicationId) inner join candidateprofile using(emailId) inner join documents using(emailId) where recruiterEmail = ? and assignboard.status = ? and applications.designation = ?";
+        query = "select Applications.applicationId, CandidateProfile.name, imageUrl, skills, position from CandidateProfile inner join documents using(date) inner join Applications using(date) inner join Assignboard using(applicationId) where recruiterEmail = ? and assignboard.status = ? and applications.designation = ? and CandidateProfile.deleted = 0 and Documents.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0 group by Applications.applicationId";
+        //select applications.applicationId, candidateprofile.name,documents.imageUrl,candidateprofile.emailId,candidateprofile.skills from assignboard inner join applications using(applicationId) inner join candidateprofile using(date) inner join documents using(date) where recruiterEmail = ? and assignboard.status = ? and applications.designation = ?
         List<ProfileAnalysis> profileAnalyses = new ArrayList<>();
         try {
             return jdbcTemplate.query(query,
                     (resultSet, no) -> {
                         ProfileAnalysis profileAnalysis = new ProfileAnalysis();
-                        profileAnalysis.setName(resultSet.getString(1));
-                        profileAnalysis.setImageUrl(resultSet.getString(2));
-                        profileAnalysis.setPosition(getLastJobPosition(resultSet.getString(3)));
-                        profileAnalysis.setSkills(resultSet.getString(4));
+                        profileAnalysis.setApplicationId(resultSet.getInt(1));
+                        profileAnalysis.setName(resultSet.getString(2));
+                        profileAnalysis.setImageUrl(resultSet.getString(3));
+                        profileAnalysis.setPosition(getLastJobPosition(profileAnalysis.getApplicationId()));
+                        profileAnalysis.setSkills(resultSet.getString(5));
                         profileAnalyses.add(profileAnalysis);
                         return profileAnalysis;
                     }, MemberService.getCurrentUser(), status, designation);
-        } catch (DataAccessException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
@@ -226,7 +225,7 @@ public class RecruiterService
 
     public List<Applications> getNotAssignedApplicants()
     {
-        query = "select applications.applicationId,emailId,designation,location,date from applications,assignBoard where applications.applicationId=assignBoard.applicationId and organizerEmail is null";
+        query = "select applications.applicationId,emailId,designation,location,date from applications,assignBoard where applications.applicationId=assignBoard.applicationId and organizerEmail is null and applications.deleted = 0 and assignboard.deleted = 0";
         return jdbcTemplate.query(query,new BeanPropertyRowMapper<>(Applications.class));
     }
 
@@ -237,8 +236,8 @@ public class RecruiterService
             jdbcTemplate.queryForObject(query, String.class,assignBoard.getOrganizerEmail(),"Organizer");
 
             try {
-                query = "update assignBoard set organizerEmail =?, assignDate=curDate() where recruiterEmail=? and applicationId=?";
-                jdbcTemplate.update(query,assignBoard.getOrganizerEmail(),MemberService.getCurrentUser(),assignBoard.getApplicationId());
+                query = "update assignBoard set organizerEmail =?, assignDate=curDate(), status = ? where recruiterEmail=? and applicationId=?";
+                jdbcTemplate.update(query,assignBoard.getOrganizerEmail(), "New", MemberService.getCurrentUser(),assignBoard.getApplicationId());
                 return "Candidate assigned successfully";
             }
             catch (Exception e)
@@ -252,13 +251,13 @@ public class RecruiterService
 
     public List<AssignBoardPage> getAssignBoardPage()
     {
-        query = "select candidateProfile.name,applications.designation,applications.location,assignBoard.assignDate,memberProfile.name as organizer  from memberProfile inner join assignBoard on memberProfile.emailId=assignBoard.organizerEmail inner join applications on assignBoard.applicationId=applications.applicationId inner join candidateProfile on candidateProfile.emailId=applications.emailId where recruiterEmail=?";
+        query = "select candidateProfile.name,applications.designation,applications.location,assignBoard.assignDate,memberProfile.name as organizer  from memberProfile inner join assignBoard on memberProfile.emailId=assignBoard.organizerEmail inner join applications on assignBoard.applicationId=applications.applicationId inner join candidateProfile on candidateProfile.emailId=applications.emailId where recruiterEmail=? and MemberProfile.deleted = 0 and CandidateProfile.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0 group by Applications.applicationId";
         return jdbcTemplate.query(query,new BeanPropertyRowMapper<>(AssignBoardPage.class),MemberService.getCurrentUser());
     }
 
     public List<RejectedCv> getRejectedCvPage()
     {
-        query = "select candidateProfile.name,documents.ImageUrl,applications.designation,applications.location,candidateProfile.mobileNumber from documents inner join candidateProfile on documents.emailId=candidateProfile.emailId inner join applications on candidateProfile.emailId=applications.emailId inner join assignBoard on applications.applicationId=assignBoard.applicationId where assignBoard.status=?";
+        query = "select candidateProfile.name,documents.ImageUrl,applications.designation,applications.location,candidateProfile.mobileNumber from documents inner join candidateProfile on documents.emailId=candidateProfile.emailId inner join applications on candidateProfile.emailId=applications.emailId inner join assignBoard on applications.applicationId=assignBoard.applicationId where assignBoard.status=? and Documents.deleted = 0 and CandidateProfile.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0 group by Applications.applicationId";
         return jdbcTemplate.query(query,new BeanPropertyRowMapper<>(RejectedCv.class),"Rejected");
     }
 
