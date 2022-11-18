@@ -58,7 +58,7 @@ public class EmailService {
             try
             {
                 jdbcTemplate.queryForObject("select emailId from forgotPassword where emailId=?", String.class,toEmail);
-                jdbcTemplate.update("update forgotPassword set otp=?,expireTime=? where emailId=?",OTP,(System.currentTimeMillis()/1000)+120,toEmail);
+                jdbcTemplate.update("update forgotPassword set otp=?,expireTime=? where emailId=?",OTP,(System.currentTimeMillis()/1000/60),toEmail);
                 return flag = true;
             }
             catch (Exception e)
