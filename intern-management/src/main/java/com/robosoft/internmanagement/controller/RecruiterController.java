@@ -38,9 +38,9 @@ public class RecruiterController
     }
 
     @GetMapping("/organizers")
-    public List<Organizer> getList(@RequestParam String emailId)
+    public List<Organizer> getOrganizersList()
     {
-        return recruiterService.getOrganizer(emailId);
+        return recruiterService.getOrganizer();
     }
 
     @GetMapping("/summary")
@@ -68,9 +68,9 @@ public class RecruiterController
     }
 
     @GetMapping("/cv-analysis")
-    public List<CvAnalysis> getCv (@RequestParam(required = false) Date date)
+    public List<?> getCv (@RequestParam(required = false) Date date, @RequestParam int pageNo, int limit)
     {
-        return recruiterService.cvAnalysisPage(date);
+        return recruiterService.cvAnalysisPage(date, pageNo, limit);
     }
 
     @GetMapping("/search/{designation}")
@@ -116,8 +116,8 @@ public class RecruiterController
 
     //pagination
     @GetMapping("/profiles/{designation}/{status}")
-    public ResponseEntity<?> getProfileBasedOnStatus(@PathVariable String designation, @PathVariable String status) {
-        return ResponseEntity.status(HttpStatus.FOUND).body(recruiterService.getProfileBasedOnStatus(designation, status));
+    public ResponseEntity<?> getProfileBasedOnStatus(@PathVariable String designation, @PathVariable String status, @RequestParam int pageNo, @RequestParam int limit) {
+        return ResponseEntity.status(HttpStatus.FOUND).body(recruiterService.getProfileBasedOnStatus(designation, status, pageNo, limit));
     }
 
     @GetMapping("/applicants")
@@ -127,7 +127,7 @@ public class RecruiterController
     }
 
     @PutMapping("/organizer-assignation")
-    public ResponseEntity<String> setOrganizer(@ModelAttribute AssignBoard assignBoard)
+    public ResponseEntity<?> setOrganizer(@ModelAttribute AssignBoard assignBoard)
     {
         String result = recruiterService.assignOrganizer(assignBoard);
         if(result==null)
@@ -144,9 +144,13 @@ public class RecruiterController
     }
 
     @GetMapping("/rejected-cv")
-    public List<RejectedCv> getCvPage()
+    public ResponseEntity<?> getCvPage()
     {
-        return recruiterService.getRejectedCvPage();
+        List<RejectedCv> rejectedCvs = recruiterService.getRejectedCvPage();
+        if(rejectedCvs.size() > 0){
+            return ResponseEntity.status(HttpStatus.FOUND).body(rejectedCvs);
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
     @GetMapping("/invite-info")
@@ -155,29 +159,29 @@ public class RecruiterController
         return recruiterService.getInviteInfo();
     }
 
-    @GetMapping("/invite-byDay")
+    @GetMapping("/invite-by-day")
     public List<SentInvites> getByDay(@RequestParam Date date)
     {
         return recruiterService.getByDay(date);
     }
 
-    @GetMapping("/invite-byMonth")
+    @GetMapping("/invite-by-month")
     public List<SentInvites> getByMonth(@RequestParam Date date)
     {
         return recruiterService.getByMonth(date);
     }
 
-    @GetMapping("/invite-byYear")
+    @GetMapping("/invite-by-year")
     public List<SentInvites> getByYear(@RequestParam Date date)
     {
         return recruiterService.getByYear(date);
     }
 
-    @PutMapping("/resent-invite")
+    @PutMapping("/resend-invite")
     public String reSentInvite(@RequestParam int inviteId)
     {
         boolean result = emailService.reSentInvite(inviteId);
-        if (result=true)
+        if (result)
         {
             return "Invite sent";
         }

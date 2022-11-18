@@ -173,9 +173,19 @@ public class MemberService {
 
     }
 
-    public List<Notifications> getNotifications(){
-        query = "select notificationId, message, type from notifications where emailId = ? and deleted =0 order by notificationId desc";
-        return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(Notifications.class), currentUser);
+    public List<?> getNotifications(int pageNo, int limit){
+        int offset = (pageNo - 1) * limit;
+        int totalCount = 0;
+        if(pageNo == 1){
+            query = "select count(*) from notifications where emailId = ? and deleted =0";
+            totalCount = jdbcTemplate.queryForObject(query, Integer.class, currentUser);
+        }
+        query = "select notificationId, message, type from notifications where emailId = ? and deleted =0 order by notificationId desc limit ?, ?";
+        List<Notifications> notifications = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(Notifications.class), currentUser, offset, limit);
+        if(pageNo ==1) {
+            return List.of(totalCount, notifications.size(), notifications);
+        }
+        return List.of(notifications.size(), notifications);
     }
 
     public String encodePassword(String password){

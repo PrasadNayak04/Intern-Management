@@ -30,8 +30,8 @@ public class MemberController {
     private MemberService memberService;
 
     @GetMapping("/notifications")
-    public ResponseEntity<?> getNotifications(){
-        return ResponseEntity.ok(memberService.getNotifications());
+    public ResponseEntity<?> getNotifications(@RequestParam int pageNo, @RequestParam int limit){
+        return ResponseEntity.ok(memberService.getNotifications(pageNo, limit));
     }
 
     @PostMapping("/event-creation")

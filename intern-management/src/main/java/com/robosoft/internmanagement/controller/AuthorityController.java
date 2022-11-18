@@ -1,6 +1,5 @@
 package com.robosoft.internmanagement.controller;
 
-
 import com.robosoft.internmanagement.modelAttributes.Applications;
 import com.robosoft.internmanagement.modelAttributes.AssignBoard;
 import com.robosoft.internmanagement.service.AuthorityService;
