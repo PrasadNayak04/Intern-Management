@@ -33,7 +33,7 @@ public class RecruiterController
         if (result){
             return ResponseEntity.ok().body("Invite sent to " + invites.getCandidateName());
         }else {
-            return ResponseEntity.status(HttpStatus.valueOf("Insufficient information")).build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
@@ -44,9 +44,9 @@ public class RecruiterController
     }
 
     @GetMapping("/summary")
-    public Summary getSummary()
+    public Summary getSummary(@RequestParam Date date)
     {
-        return recruiterService.getSummary();
+        return recruiterService.getSummary(date);
     }
 
     @GetMapping("/cv-count")
@@ -147,6 +147,41 @@ public class RecruiterController
     public List<RejectedCv> getCvPage()
     {
         return recruiterService.getRejectedCvPage();
+    }
+
+    @GetMapping("/invite-info")
+    public Invite getInfo()
+    {
+        return recruiterService.getInviteInfo();
+    }
+
+    @GetMapping("/invite-byDay")
+    public List<SentInvites> getByDay(@RequestParam Date date)
+    {
+        return recruiterService.getByDay(date);
+    }
+
+    @GetMapping("/invite-byMonth")
+    public List<SentInvites> getByMonth(@RequestParam Date date)
+    {
+        return recruiterService.getByMonth(date);
+    }
+
+    @GetMapping("/invite-byYear")
+    public List<SentInvites> getByYear(@RequestParam Date date)
+    {
+        return recruiterService.getByYear(date);
+    }
+
+    @PutMapping("/resent-invite")
+    public String reSentInvite(@RequestParam int inviteId)
+    {
+        boolean result = emailService.reSentInvite(inviteId);
+        if (result=true)
+        {
+            return "Invite sent";
+        }
+        return "Failed";
     }
 
 }
