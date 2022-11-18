@@ -13,6 +13,7 @@ import java.sql.Date;
 @RequiredArgsConstructor
 public class ProfileAnalysis {
 
+    private int applicationId;
     private String name;
     private String imageUrl;
     private String skills;

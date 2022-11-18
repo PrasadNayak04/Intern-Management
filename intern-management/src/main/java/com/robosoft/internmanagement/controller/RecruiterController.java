@@ -38,9 +38,9 @@ public class RecruiterController
     }
 
     @GetMapping("/organizers")
-    public List<Organizer> getList()
+    public List<Organizer> getList(@RequestParam String emailId)
     {
-        return recruiterService.getOrganizer();
+        return recruiterService.getOrganizer(emailId);
     }
 
     @GetMapping("/summary")
@@ -92,21 +92,21 @@ public class RecruiterController
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(technologies);
     }
 
-    @GetMapping("/extended-cv/{emailId}")
-    public ResponseEntity<?> getExtendedCV(@PathVariable String emailId){
-        ExtendedCV extendedCV = recruiterService.getBasicCVDetails(emailId);
+    @GetMapping("/extended-cv/{applicationId}")
+    public ResponseEntity<?> getExtendedCV(@PathVariable int applicationId){
+        ExtendedCV extendedCV = recruiterService.getBasicCVDetails(applicationId);
         if(extendedCV == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No candidate found with email " + emailId);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No candidate found with application Id " + applicationId);
         }
-        extendedCV.setEducations(recruiterService.getEducationsHistory(emailId));
-        extendedCV.setWorkHistories(recruiterService.getWorkHistory(emailId));
-        extendedCV.setLinks(recruiterService.getSocialLinks(emailId));
+        extendedCV.setEducations(recruiterService.getEducationsHistory(applicationId));
+        extendedCV.setWorkHistories(recruiterService.getWorkHistory(applicationId));
+        extendedCV.setLinks(recruiterService.getSocialLinks(applicationId));
         return ResponseEntity.ok(extendedCV);
     }
 
-    @GetMapping("/resume-url/{emailId}")
-    public ResponseEntity<?> getResumeDownloadUrl(@PathVariable String emailId){
-        String url = recruiterService.downloadCV(emailId);
+    @GetMapping("/resume-url/{applicationId}")
+    public ResponseEntity<?> getResumeDownloadUrl(@PathVariable int applicationId){
+        String url = recruiterService.downloadCV(applicationId);
         if(url.equals(null))
         {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();

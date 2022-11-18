@@ -33,7 +33,7 @@ public class CandidateService {
         }
         catch (Exception e) {
             try {
-                String query1 = "insert into candidateProfile(name,dob,mobileNumber,emailId,date,jobLocation,gender,position,expYear,expMonth,candidateType,contactPerson,languagesKnown,softwaresWorked,skills,about,currentCTC,expectedCTC) values('" + candidateProfile.getName() + "','" + candidateProfile.getDob() + "','" + candidateProfile.getMobileNumber() + "','" + candidateProfile.getEmailId() + "','" + LocalDate.now() + "','" + candidateProfile.getJobLocation() + "','" + candidateProfile.getGender() + "','" + candidateProfile.getPosition() + "'," + candidateProfile.getExpYear() + "," + candidateProfile.getExpMonth() + ",'" + candidateProfile.getCandidateType() + "','" + candidateProfile.getContactPerson() + "','" + candidateProfile.getLanguagesKnown() + "','" + candidateProfile.getSoftwareWorked() + "','" + candidateProfile.getSkills() + "','" + candidateProfile.getAbout() + "'," + candidateProfile.getCurrentCTC() + "," + candidateProfile.getExpectedCTC() + ")";
+                String query1 = "insert into candidateProfile(name,dob,mobileNumber,emailId,date,jobLocation,gender,position,expYear,expMonth,candidateType,contactPerson,languagesKnown,softwaresWorked,skills,about,currentCTC,expectedCTC) values('" + candidateProfile.getName() + "','" + candidateProfile.getDob() + "','" + candidateProfile.getMobileNumber() + "','" + candidateProfile.getEmailId() + "','" + date + "','" + candidateProfile.getJobLocation() + "','" + candidateProfile.getGender() + "','" + candidateProfile.getPosition() + "'," + candidateProfile.getExpYear() + "," + candidateProfile.getExpMonth() + ",'" + candidateProfile.getCandidateType() + "','" + candidateProfile.getContactPerson() + "','" + candidateProfile.getLanguagesKnown() + "','" + candidateProfile.getSoftwareWorked() + "','" + candidateProfile.getSkills() + "','" + candidateProfile.getAbout() + "'," + candidateProfile.getCurrentCTC() + "," + candidateProfile.getExpectedCTC() + ")";
                 jdbcTemplate.update(query1);
                 String photoRes = storageService.singleFileUpload(candidateProfile.getPhoto(), candidateProfile.getEmailId(), request);
                 if (photoRes.equals("empty")) {
@@ -88,12 +88,12 @@ public class CandidateService {
     }
 
     public void delCandidateQuery(String emailId,LocalDate date) {
-        String delQuery = "delete from candidateProfile where emailId = '"+ emailId+"'";
+        String delQuery = "delete from candidateProfile where emailId = ? and date = ?";
         String delPhotoUrl = "delete from documents where emailId = ? and date = ?";
         String delEducation = "delete from education where emailId = ? and date = ?";
         String delWork = "delete from workHistory where emailId = ? and date = ?";
         String delAddress = "delete from address where emailId = ? and date = ?";
-        jdbcTemplate.update(delQuery);
+        jdbcTemplate.update(delQuery, emailId, date);
         jdbcTemplate.update(delPhotoUrl,emailId,date);
         jdbcTemplate.update(delEducation,emailId,date);
         jdbcTemplate.update(delWork,emailId,date);

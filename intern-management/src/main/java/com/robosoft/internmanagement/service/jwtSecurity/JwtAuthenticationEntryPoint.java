@@ -1,4 +1,4 @@
-package com.robosoft.internmanagement.service.JwtSecurity;
+package com.robosoft.internmanagement.service.jwtSecurity;
 
 
 import org.springframework.security.core.AuthenticationException;
