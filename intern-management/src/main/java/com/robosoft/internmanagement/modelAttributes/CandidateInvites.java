@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 public class CandidateInvites
 {
 
+    private int candidateInviteId;
     private String candidateName;
     private String designation;
     private long mobileNumber;

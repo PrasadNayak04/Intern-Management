@@ -31,6 +31,9 @@ public class MemberController {
 
     @GetMapping("/notifications")
     public ResponseEntity<?> getNotifications(@RequestParam int pageNo, @RequestParam int limit){
+        if(!memberService.validPageDetails(pageNo, limit)){
+            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Invalid page details");
+        }
         return ResponseEntity.ok(memberService.getNotifications(pageNo, limit));
     }
 

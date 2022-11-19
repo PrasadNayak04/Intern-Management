@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/intern-management/Authority")
+@RequestMapping("/intern-management/authority")
 public class AuthorityController
 {
     @Autowired

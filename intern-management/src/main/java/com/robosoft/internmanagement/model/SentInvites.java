@@ -6,6 +6,7 @@ import lombok.Data;
 public class SentInvites
 {
 
+    private int candidateInviteId;
     private String name;
     private String designation;
     private String location;

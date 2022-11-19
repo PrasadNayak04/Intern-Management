@@ -202,5 +202,14 @@ public class MemberService {
         }
     }
 
+    public boolean validPageDetails(int pageNo, Integer limit){
+        if(limit == null){
+            return true;
+        }
+        if(pageNo < 1 || limit < 1)
+            return false;
+        return true;
+    }
+
 
 }

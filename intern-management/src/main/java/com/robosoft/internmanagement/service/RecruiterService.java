@@ -25,11 +25,11 @@ public class RecruiterService
 
     String query;
 
-    public List<Organizer> getOrganizer()
+    public List<?> getOrganizer(Integer limit)
     {
         String status = "new";
         List<Organizer> organizerList = new ArrayList<>();
-        query = "select memberProfile.name, memberProfile.emailId, memberProfile.photoUrl from memberProfile inner join AssignBoard on memberProfile.emailId = AssignBoard.organizerEmail where assignBoard.recruiterEmail = '" +MemberService.getCurrentUser()+ "' and assignBoard.status='" + status + "' group by assignBoard.recruiterEmail";
+        query = "select memberProfile.name, memberProfile.emailId, memberProfile.photoUrl from memberProfile inner join AssignBoard on memberProfile.emailId = AssignBoard.organizerEmail where assignBoard.recruiterEmail = '" +MemberService.getCurrentUser()+ "' and assignBoard.status='" + status + "' group by assignBoard.organizerEmail";
 
         jdbcTemplate.query(query,
                 (resultSet, no) -> {
@@ -40,7 +40,13 @@ public class RecruiterService
                     organizerList.add(organizer);
                     return organizer;
                 });
-        return organizerList;
+
+        Collections.sort(organizerList);
+
+        if(limit == null){
+            limit = organizerList.size();
+        }
+        return organizerList.subList(0, limit);
     }
 
     public int getInterviewsCount(String organizerEmail, String recruiterEmail){
@@ -227,7 +233,7 @@ public class RecruiterService
         int offset = (pageNo - 1) * limit;
         int totalCount = 0;
         if(pageNo == 1){
-            query = "select count(*) from CandidateProfile inner join documents using(date) inner join Applications using(date) inner join Assignboard using(applicationId) where recruiterEmail = ? and assignboard.status = ? and applications.designation = ? and CandidateProfile.deleted = 0 and Documents.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0 group by Applications.applicationId";
+            query = "select count(distinct Applications.applicationId) from CandidateProfile inner join documents using(date) inner join Applications using(date) inner join Assignboard using(applicationId) where recruiterEmail = ? and assignboard.status = ? and applications.designation = ? and CandidateProfile.deleted = 0 and Documents.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0";
             totalCount = jdbcTemplate.queryForObject(query, Integer.class, MemberService.getCurrentUser(), status, designation);
         }
 
@@ -249,7 +255,7 @@ public class RecruiterService
             if(pageNo == 1) {
                 return List.of(totalCount, profileAnalyses.size(), profileAnalyses);
             }
-            return List.of(profileAnalyses, profileAnalyses);
+            return List.of(profileAnalyses.size(), profileAnalyses);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -275,7 +281,7 @@ public class RecruiterService
                 query = "select applicationId from assignBoard where recruiterEmail=? and applicationId=?";
                 jdbcTemplate.queryForObject(query, Integer.class, MemberService.getCurrentUser(), assignBoard.getApplicationId());
                 try {
-                    query = "update assignBoard set organizerEmail =?, assignDate=curDate() where recruiterEmail=? and applicationId=?";
+                    query = "update assignBoard set organizerEmail =?, assignDate=curDate(), status = 'new' where recruiterEmail=? and applicationId=?";
                     jdbcTemplate.update(query, assignBoard.getOrganizerEmail(), MemberService.getCurrentUser(), assignBoard.getApplicationId());
                     return "Candidate assigned successfully";
                 } catch (Exception e) {
@@ -292,18 +298,36 @@ public class RecruiterService
         }
     }
 
-    public List<AssignBoardPage> getAssignBoardPage()
+    public List<?> getAssignBoardPage(int pageNo, int limit)
     {
-        query = "select candidateProfile.name,applications.designation,applications.location,assignBoard.assignDate,memberProfile.name as organizer  from memberProfile inner join assignBoard on memberProfile.emailId=assignBoard.organizerEmail inner join applications on assignBoard.applicationId=applications.applicationId inner join candidateProfile on candidateProfile.emailId=applications.emailId where recruiterEmail=? and MemberProfile.deleted = 0 and CandidateProfile.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0 group by Applications.applicationId";
-        return jdbcTemplate.query(query,new BeanPropertyRowMapper<>(AssignBoardPage.class),MemberService.getCurrentUser());
+        int offset = (pageNo - 1) * limit;
+        int totalCount = 0;
+        if(pageNo == 1){
+            query = "select count(distinct Applications.applicationId) from memberProfile inner join assignBoard on memberProfile.emailId=assignBoard.organizerEmail inner join applications on assignBoard.applicationId=applications.applicationId inner join candidateProfile on candidateProfile.emailId=applications.emailId where recruiterEmail=? and MemberProfile.deleted = 0 and CandidateProfile.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0";
+            totalCount = jdbcTemplate.queryForObject(query, Integer.class, MemberService.getCurrentUser());
+        }
+        query = "select candidateProfile.name,applications.designation,applications.location,assignBoard.assignDate,memberProfile.name as organizer  from memberProfile inner join assignBoard on memberProfile.emailId=assignBoard.organizerEmail inner join applications on assignBoard.applicationId=applications.applicationId inner join candidateProfile on candidateProfile.emailId=applications.emailId where recruiterEmail=? and status = 'new' and MemberProfile.deleted = 0 and CandidateProfile.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0 group by Applications.applicationId limit ?, ?";
+        List<AssignBoardPage> assignBoardPages = jdbcTemplate.query(query,new BeanPropertyRowMapper<>(AssignBoardPage.class),MemberService.getCurrentUser(), offset, limit);
+
+        if(pageNo == 1){
+            return List.of(totalCount, assignBoardPages.size(), assignBoardPages);
+        }
+        return List.of(assignBoardPages.size(), assignBoardPages);
     }
 
-    public List<RejectedCv> getRejectedCvPage()
+    public List<?> getRejectedCvPage(int pageNo, int limit)
     {
-        query = "select Applications.applicationId, candidateProfile.name,documents.ImageUrl,applications.location,candidateProfile.mobileNumber from documents inner join candidateProfile on documents.emailId=candidateProfile.emailId inner join applications on candidateProfile.emailId=applications.emailId inner join assignBoard on applications.applicationId=assignBoard.applicationId where assignBoard.status=? and assignBoard.recruiterEmail=? and Documents.deleted = 0 and CandidateProfile.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0 group by applications.applicationId";
+        int offset = (pageNo - 1) * limit;
+        int totalCount = 0;
+        if(pageNo == 1){
+            query = "select count(distinct Applications.applicationId) from documents inner join candidateProfile on documents.emailId=candidateProfile.emailId inner join applications on candidateProfile.emailId=applications.emailId inner join assignBoard on applications.applicationId=assignBoard.applicationId where assignBoard.status=? and assignBoard.recruiterEmail=? and Documents.deleted = 0 and CandidateProfile.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0";
+            totalCount = jdbcTemplate.queryForObject(query, Integer.class, "Rejected", MemberService.getCurrentUser());
+        }
+
+        query = "select Applications.applicationId, candidateProfile.name,documents.ImageUrl,applications.location,candidateProfile.mobileNumber from documents inner join candidateProfile on documents.emailId=candidateProfile.emailId inner join applications on candidateProfile.emailId=applications.emailId inner join assignBoard on applications.applicationId=assignBoard.applicationId where assignBoard.status=? and assignBoard.recruiterEmail=? and Documents.deleted = 0 and CandidateProfile.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0 group by applications.applicationId limit ?,?";
         List<RejectedCv> rejectedCvList = new ArrayList<>();
         try {
-            return jdbcTemplate.query(query,
+            jdbcTemplate.query(query,
                     (resultSet,no) -> {
                         RejectedCv list = new RejectedCv();
 
@@ -315,7 +339,12 @@ public class RecruiterService
                         list.setMobileNumber(resultSet.getLong(5));
                         rejectedCvList.add(list);
                         return list;
-                    },"Rejected",MemberService.getCurrentUser());
+                    },"Rejected",MemberService.getCurrentUser(), offset, limit);
+
+            if(pageNo == 1){
+                return List.of(totalCount, rejectedCvList.size(), rejectedCvList);
+            }
+            return List.of(rejectedCvList.size(), rejectedCvList);
         }catch (Exception e)
         {
             e.printStackTrace();
@@ -323,47 +352,88 @@ public class RecruiterService
         }
     }
 
-
     public Invite getInviteInfo()
     {
         Invite invite=new Invite();
-        query = "select count(*) from candidateInvites where date=curDate() and fromEmail=?";
-        invite.setToday(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
+        try {
+            query = "select count(*) from candidateInvites where date=curDate() and fromEmail=?";
+            invite.setToday(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
 
-        query = "select count(*) from candidateInvites where date=DATE_SUB(curDATE(),INTERVAL 1 DAY) and fromEmail=?";
-        invite.setYesterday(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
+            query = "select count(*) from candidateInvites where date=DATE_SUB(curDATE(),INTERVAL 1 DAY) and fromEmail=?";
+            invite.setYesterday(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
 
-        query = "select count(*) from candidateInvites where month(date)=month(curDate())-1 and year(date)=year(curDate()) and fromEmail=?";
-        invite.setPastMonth(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
+            query = "select count(*) from candidateInvites where month(date)=month(curDate())-1 and year(date)=year(curDate()) and fromEmail=?";
+            invite.setPastMonth(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
 
-        query = "select count(*) from candidateInvites where month(date)=month(curDate())-2 and year(date)=year(curDate()) and fromEmail=?";
-        invite.setTwoMonthBack(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
+            query = "select count(*) from candidateInvites where month(date)=month(curDate())-2 and year(date)=year(curDate()) and fromEmail=?";
+            invite.setTwoMonthBack(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
 
-        query = "select count(*) from candidateInvites where year(date)=year(curDate())-1 and fromEmail=?";
-        invite.setPassYear(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
+            query = "select count(*) from candidateInvites where year(date)=year(curDate())-1 and fromEmail=?";
+            invite.setPassYear(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
 
-        query = "select count(*) from candidateInvites where year(date)=year(curDate())-2 and fromEmail=?";
-        invite.setTwoYearBack(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
+            query = "select count(*) from candidateInvites where year(date)=year(curDate())-2 and fromEmail=?";
+            invite.setTwoYearBack(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
 
-        return invite;
+            return invite;
+        } catch (Exception e) {
+            return null;
+        }
+
     }
 
-    public List<SentInvites> getByDay(Date date)
+    public List<?> getByDay(Date date, int pageNo, int limit)
     {
-        query = "select candidateName as name,designation,location,CandidateEmail as email from candidateInvites where date=? and fromEmail=?";
-        return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvites.class),date,MemberService.getCurrentUser());
+        int offset = (pageNo - 1) * limit;
+        int totalCount = 0;
+        if(pageNo == 1){
+            query = "select count(*) from candidateInvites where date=? and fromEmail=?";
+            totalCount = jdbcTemplate.queryForObject(query, Integer.class, date, MemberService.getCurrentUser());
+        }
+        query = "select inviteId, candidateName as name,designation,location,CandidateEmail as email from candidateInvites where date=? and fromEmail=? limit ?, ?";
+        List<SentInvites> sentInvites = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvites.class),date,MemberService.getCurrentUser(), offset, limit);
+
+        if(pageNo == 1){
+            return List.of(totalCount, sentInvites.size(), sentInvites);
+        }
+        return List.of(sentInvites.size(), sentInvites);
+
     }
 
-    public List<SentInvites> getByMonth(Date date)
+    public List<?> getByMonth(Date date, int pageNo, int limit)
     {
-        query = "select candidateName as name,designation,location,CandidateEmail as email from candidateInvites where month(date)=? and year(date)=? and fromEmail=?";
-        return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvites.class), date.toLocalDate().getMonthValue(),date.toLocalDate().getYear(),MemberService.getCurrentUser());
+        int offset = (pageNo - 1) * limit;
+        int totalCount = 0;
+        if(pageNo == 1){
+            query = "select count(*) from candidateInvites where month(date)=? and year(date)=? and fromEmail=?";
+            totalCount = jdbcTemplate.queryForObject(query, Integer.class, date.toLocalDate().getMonthValue(), date.toLocalDate().getYear(), MemberService.getCurrentUser());
+        }
+        query = "select inviteId, candidateName as name,designation,location,CandidateEmail as email from candidateInvites where month(date)=? and year(date)=? and fromEmail=? limit ?, ?";
+        List<SentInvites> sentInvites = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvites.class), date.toLocalDate().getMonthValue(),date.toLocalDate().getYear(), MemberService.getCurrentUser(), offset, limit);
+
+        if(pageNo == 1){
+            return List.of(totalCount, sentInvites.size(), sentInvites);
+        }
+        return List.of(sentInvites.size(), sentInvites);
+
     }
 
-    public List<SentInvites> getByYear(Date date)
+    public List<?> getByYear(Date date, int pageNo, int limit)
     {
-        query = "select candidateName as name,designation,location,CandidateEmail as email from candidateInvites where year(date)=? and fromEmail=?";
-        return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvites.class),date.toLocalDate().getYear(),MemberService.getCurrentUser());
-    }
+        int offset = (pageNo - 1) * limit;
+        int totalCount = 0;
+        if(pageNo == 1){
+            query = "select count(*) from candidateInvites where year(date)=? and fromEmail=?";
+            totalCount = jdbcTemplate.queryForObject(query, Integer.class, date.toLocalDate().getYear(), MemberService.getCurrentUser());
+        }
+
+        query = "select inviteId, candidateName as name,designation,location,CandidateEmail as email from candidateInvites where year(date)=? and fromEmail=? limit ?, ?";
+        List<SentInvites> sentInvites = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvites.class),date.toLocalDate().getYear(),MemberService.getCurrentUser(), offset, limit);
+
+        if(pageNo == 1){
+            return List.of(totalCount, sentInvites.size(), sentInvites);
+        }
+        return List.of(sentInvites.size(), sentInvites);
+
+       }
 
 }
