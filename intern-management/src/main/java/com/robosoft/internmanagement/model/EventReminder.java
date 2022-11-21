@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 import java.sql.Date;
-import java.util.List;
 
 @Data
 @RequiredArgsConstructor

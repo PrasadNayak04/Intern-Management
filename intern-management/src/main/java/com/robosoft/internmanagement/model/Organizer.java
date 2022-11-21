@@ -1,5 +1,6 @@
 package com.robosoft.internmanagement.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -7,10 +8,12 @@ import lombok.RequiredArgsConstructor;
 @Data
 @RequiredArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include. NON_NULL)
 public class Organizer implements Comparable<Organizer>
 {
+    private String emailId;
     private String name;
-    private String profile;
+    private String photoUrl;
     private int interviews;
 
     @Override

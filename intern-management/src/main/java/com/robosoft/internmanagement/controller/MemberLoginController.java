@@ -22,7 +22,6 @@ import javax.servlet.http.HttpServletRequest;
 @RequestMapping("/intern-management/member-login")
 public class MemberLoginController {
 
-
     @Autowired
     private JwtUserDetailsService userDetailsService;
     @Autowired

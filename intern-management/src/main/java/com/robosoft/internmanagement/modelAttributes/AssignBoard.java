@@ -11,7 +11,7 @@ import java.sql.Date;
 @RequiredArgsConstructor
 public class AssignBoard
 {
-    private int applicationId;
+    private int candidateId;
     private String recruiterEmail;
     private String organizerEmail;
     private Date assignDate;

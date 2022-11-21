@@ -15,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ExtendedCV {
 
-    private int applicationId;
+    private int candidateId;
     private String name;
     private Date dob;
     private long mobileNumber;

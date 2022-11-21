@@ -2,8 +2,6 @@ package com.robosoft.internmanagement.service.batchScheduleService;
 
 import com.robosoft.internmanagement.model.EventReminder;
 import com.robosoft.internmanagement.service.MemberService;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -17,20 +15,12 @@ import java.util.List;
 public class SchedulerConfig {
 
     @Autowired
-    JobLauncher jobLauncher;
-
-    @Autowired
     JdbcTemplate jdbcTemplate;
 
     @Autowired
     MemberService memberService;
 
-    @Autowired
-    Job job;
-
-    int i = 0;
-
-    @Scheduled(cron = "0 */1 * * * ?")
+    @Scheduled(cron = "0 0 05 * * ?")
     public void scheduleByFixedRate() throws Exception {
 
         String query = "select eventId, creatorEmail, title, venue, location, date from Events where 0 <= (date-CURDATE()) <= 5";
@@ -46,7 +36,7 @@ public class SchedulerConfig {
                     eventReminder.setLocation(resultSet.getString(5));
                     eventReminder.setDate(resultSet.getDate(6));
 
-                    String query0 = "select invitedEmail from eventInvites where eventId = ?";
+                    String query0 = "select invitedEmail from EventsInvites where eventId = ? and status = 'JOIN'";
                     List<String> invitedEmails = jdbcTemplate.queryForList(query0, String.class, eventReminder.getEventId());
 
                     String creatorName;

@@ -11,15 +11,16 @@ public class OrganizerService
     @Autowired
     JdbcTemplate jdbcTemplate;
 
-    private String query;
-
     public String takeInterview(AssignBoard board){
+        if(!(MemberService.getCurrentUser().equals(board.getOrganizerEmail()))){
+            return "You can only take interviews which are assigned to you.";
+        }
         try{
-            query = "select status from assignBoard where applicationId=? and organizerEmail=? and status=?";
-            jdbcTemplate.queryForObject(query,String.class,board.getApplicationId(),board.getOrganizerEmail(),"new");
+            String query = "select status from Assignboard where candidateId=? and organizerEmail=? and status=? and deleted = 0";
+            jdbcTemplate.queryForObject(query,String.class,board.getCandidateId(),board.getOrganizerEmail(),"NEW");
 
-            query = "update assignBoard set status=? where applicationId=? and organizerEmail=? and status=?";
-            jdbcTemplate.update(query,board.getStatus(),board.getApplicationId(),board.getOrganizerEmail(),"new");
+            query = "update Assignboard set status=? where candidateId=? and organizerEmail=? and status=?";
+            jdbcTemplate.update(query,board.getStatus(),board.getCandidateId(),board.getOrganizerEmail(),"NEW");
         }
         catch (Exception e)
         {

@@ -1,7 +1,7 @@
 package com.robosoft.internmanagement.controller;
 
 import com.robosoft.internmanagement.model.*;
-import com.robosoft.internmanagement.modelAttributes.Applications;
+import com.robosoft.internmanagement.model.Applications;
 import com.robosoft.internmanagement.modelAttributes.AssignBoard;
 import com.robosoft.internmanagement.modelAttributes.CandidateInvites;
 import com.robosoft.internmanagement.service.EmailService;
@@ -41,6 +41,11 @@ public class RecruiterController
         }
     }
 
+    @GetMapping("/available-organizers")
+    public ResponseEntity<?> getAllOrganizers(){
+        return ResponseEntity.ok(recruiterService.getAllOrganizers());
+    }
+
     @GetMapping("/organizers")
     public ResponseEntity<?> getOrganizersList(@RequestParam (required = false) Integer limit)
     {
@@ -60,18 +65,6 @@ public class RecruiterController
     public int getCv()
     {
         return recruiterService.cvCount();
-    }
-
-    @GetMapping("/logged-profile")
-    public LoggedProfile getProfile()
-    {
-        return recruiterService.getProfile();
-    }
-
-    @GetMapping("/notification-display")
-    public NotificationDisplay getNotifications()
-    {
-        return recruiterService.notification();
     }
 
     @GetMapping("/cv-analysis")
@@ -102,22 +95,22 @@ public class RecruiterController
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(technologies);
     }
 
-    @GetMapping("/extended-cv/{applicationId}")
-    public ResponseEntity<?> getExtendedCV(@PathVariable int applicationId){
-        ExtendedCV extendedCV = recruiterService.getBasicCVDetails(applicationId);
+    @GetMapping("/extended-cv/{candidateId}")
+    public ResponseEntity<?> getExtendedCV(@PathVariable int candidateId){
+        ExtendedCV extendedCV = recruiterService.getBasicCVDetails(candidateId);
         if(extendedCV == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No candidate found with application Id " + applicationId);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No candidate found with application Id " + candidateId);
         }
-        extendedCV.setEducations(recruiterService.getEducationsHistory(applicationId));
-        extendedCV.setWorkHistories(recruiterService.getWorkHistory(applicationId));
-        extendedCV.setLinks(recruiterService.getSocialLinks(applicationId));
+        extendedCV.setEducations(recruiterService.getEducationsHistory(candidateId));
+        extendedCV.setWorkHistories(recruiterService.getWorkHistory(candidateId));
+        extendedCV.setLinks(recruiterService.getSocialLinks(candidateId));
         return ResponseEntity.ok(extendedCV);
     }
 
-    @GetMapping("/resume-url/{applicationId}")
-    public ResponseEntity<?> getResumeDownloadUrl(@PathVariable int applicationId){
-        String url = recruiterService.downloadCV(applicationId);
-        if(url.equals(null))
+    @GetMapping("/resume-url/{candidateId}")
+    public ResponseEntity<?> getResumeDownloadUrl(@PathVariable int candidateId){
+        String url = recruiterService.downloadCV(candidateId);
+        if(url.equals(""))
         {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }

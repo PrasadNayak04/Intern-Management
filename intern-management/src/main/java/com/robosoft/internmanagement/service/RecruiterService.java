@@ -4,14 +4,11 @@ import com.robosoft.internmanagement.model.*;
 import com.robosoft.internmanagement.modelAttributes.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
-import org.springframework.expression.spel.ast.PropertyOrFieldReference;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import java.sql.Date;
-import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,21 +22,26 @@ public class RecruiterService
 
     String query;
 
+    public List<?> getAllOrganizers(){
+        query = "select emailId, name, photoUrl from MembersProfile where position = 'ORGANIZER'";
+        return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(MemberModel.class));
+    }
+
     public List<?> getOrganizer(Integer limit)
     {
-        String status = "new";
+        String status = "NEW";
         List<Organizer> organizerList = new ArrayList<>();
-        query = "select memberProfile.name, memberProfile.emailId, memberProfile.photoUrl from memberProfile inner join AssignBoard on memberProfile.emailId = AssignBoard.organizerEmail where assignBoard.recruiterEmail = '" +MemberService.getCurrentUser()+ "' and assignBoard.status='" + status + "' group by assignBoard.organizerEmail";
+        query = "select name, emailId, photoUrl from MembersProfile inner join Assignboard on emailId = organizerEmail where recruiterEmail = ? and status=? group by organizerEmail";
 
         jdbcTemplate.query(query,
                 (resultSet, no) -> {
                     Organizer organizer = new Organizer();
                     organizer.setName(resultSet.getString(1));
-                    organizer.setProfile(resultSet.getString(3));
+                    organizer.setPhotoUrl(resultSet.getString(3));
                     organizer.setInterviews(getInterviewsCount(resultSet.getString(2), MemberService.getCurrentUser()));
                     organizerList.add(organizer);
                     return organizer;
-                });
+                }, MemberService.getCurrentUser(), status);
 
         Collections.sort(organizerList);
 
@@ -50,23 +52,23 @@ public class RecruiterService
     }
 
     public int getInterviewsCount(String organizerEmail, String recruiterEmail){
-        query = "select count(*) from AssignBoard where OrganizerEmail = ? and recruiterEmail = ?";
+        query = "select count(*) from Assignboard where organizerEmail = ? and recruiterEmail = ?";
         return jdbcTemplate.queryForObject(query, Integer.class, organizerEmail, recruiterEmail);
     }
 
     public Summary getSummary(Date date)
     {
         Summary summary = new Summary();
-        query = "select count(*) from assignBoard where month(assignDate)=? and year(assignDate)= ? and status = ? and recruiterEmail=?";
-        int shortlisted = jdbcTemplate.queryForObject(query, Integer.class,date.toLocalDate().getMonthValue(),date.toLocalDate().getYear(),"Shortlisted",MemberService.getCurrentUser());
+        query = "select count(*) from Assignboard where month(assignDate)=? and year(assignDate)= ? and status = ? and recruiterEmail=?";
+        int shortlisted = jdbcTemplate.queryForObject(query, Integer.class,date.toLocalDate().getMonthValue(),date.toLocalDate().getYear(),"SHORTLISTED",MemberService.getCurrentUser());
         summary.setShortlisted(shortlisted);
-        query = "select count(*) from assignBoard where month(assignDate)=? and year(assignDate)=? and status=? and recruiterEmail=?";
-        int onHold = jdbcTemplate.queryForObject(query, Integer.class,date.toLocalDate().getMonthValue(),date.toLocalDate().getYear(),"New",MemberService.getCurrentUser());
+        query = "select count(*) from Assignboard where month(assignDate)=? and year(assignDate)=? and status=? and recruiterEmail=?";
+        int onHold = jdbcTemplate.queryForObject(query, Integer.class,date.toLocalDate().getMonthValue(),date.toLocalDate().getYear(),"NEW",MemberService.getCurrentUser());
         summary.setOnHold(onHold);
-        query = "select count(*) from assignBoard where month(assignDate)=? and year(assignDate)=? and status=? and recruiterEmail=?";
-        int rejected = jdbcTemplate.queryForObject(query, Integer.class,date.toLocalDate().getMonthValue(),date.toLocalDate().getYear(),"Rejected",MemberService.getCurrentUser());
+        query = "select count(*) from Assignboard where month(assignDate)=? and year(assignDate)=? and status=? and recruiterEmail=?";
+        int rejected = jdbcTemplate.queryForObject(query, Integer.class,date.toLocalDate().getMonthValue(),date.toLocalDate().getYear(),"REJECTED",MemberService.getCurrentUser());
         summary.setRejected(rejected);
-        int assigned = jdbcTemplate.queryForObject(query, Integer.class,"Assigned",MemberService.getCurrentUser());
+        int assigned = jdbcTemplate.queryForObject(query, Integer.class,date.toLocalDate().getMonthValue(),date.toLocalDate().getYear(), "ASSIGNED",MemberService.getCurrentUser());
         int applications=shortlisted + onHold + rejected + assigned;
         summary.setApplications(applications);
         return summary;
@@ -74,30 +76,8 @@ public class RecruiterService
 
     public int cvCount()
     {
-        query = "select count(applicationId) from assignBoard where recruiterEmail=? and organizerEmail is null and deleted = 0";
+        query = "select count(candidateId) from Assignboard where recruiterEmail=? and organizerEmail is null and deleted = 0";
         return jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser());
-    }
-
-    public LoggedProfile getProfile()
-    {
-        query = "select name,designation,photoUrl from memberProfile where emailId=?";
-        return jdbcTemplate.queryForObject(query,new BeanPropertyRowMapper<>(LoggedProfile.class),MemberService.getCurrentUser());
-    }
-
-    public NotificationDisplay notification() {
-        String notification = "select message from notifications where emailId=? and deleted = 0 limit 1";
-        String notificationType = jdbcTemplate.queryForObject("select type from notifications where emailId=? and deleted = 0 limit 1", String.class, MemberService.getCurrentUser());
-        int eventId = jdbcTemplate.queryForObject("select eventId from notifications where emailId=? and deleted = 0 limit 1", Integer.class, MemberService.getCurrentUser());
-        if (notificationType.equalsIgnoreCase("Invite")) {
-            String profileImage = "select photoPath from memberProfile,notifications,events,eventInvites where notifications.emailId=events.creatorEmail and events.eventId=eventInvites.eventId and eventInvites.invitedEmail=memberProfile.emailId and notifications.emailId=? and notifications.eventId=? and memberProfile.deleted = 0 and Notifications.deleted = 0 events.deleted = 0 eventInvites.deleted = 0";
-            List<String> Images = jdbcTemplate.query(profileImage, new BeanPropertyRowMapper<>(String.class),MemberService.getCurrentUser(), eventId);
-            NotificationDisplay display = jdbcTemplate.queryForObject(notification, new BeanPropertyRowMapper<>(NotificationDisplay.class), MemberService.getCurrentUser());
-            display.setImages(Images);
-            return display;
-        } else {
-            NotificationDisplay display = jdbcTemplate.queryForObject(notification, new BeanPropertyRowMapper<>(NotificationDisplay.class), MemberService.getCurrentUser());
-            return display;
-        }
     }
 
     public List<?> cvAnalysisPage(Date date, int pageNo, int limit)
@@ -111,11 +91,11 @@ public class RecruiterService
         int offset = (pageNo - 1) * limit;
         int totalCount = 0;
         if(pageNo == 1){
-            query = "select count(distinct Applications.designation) from applications,technologies where applications.designation = technologies.designation and date=? and applications.deleted = 0 and technologies.deleted = 0 group by Applications.designation";
+            query = "select count(distinct Applications.designation) from Applications,Technologies where Applications.designation = Technologies.designation and date=? and Applications.deleted = 0 and Technologies.deleted = 0 group by Applications.designation";
             totalCount = jdbcTemplate.queryForObject(query, Integer.class, date);
         }
 
-        query = "select applications.designation,count(applications.designation),date,status from applications,technologies where applications.designation = technologies.designation and date=? and applications.deleted = 0 and technologies.deleted = 0 group by Applications.designation limit ?, ?";
+        query = "select Applications.designation,count(Applications.designation),date,status from Applications,Technologies where Applications.designation = Technologies.designation and date=? and Applications.deleted = 0 and Technologies.deleted = 0 group by Applications.designation limit ?, ?";
         List<CvAnalysis> cvAnalyses = jdbcTemplate.query(query,
                 (resultSet, no) -> {
                     CvAnalysis cvAnalysis = new CvAnalysis();
@@ -139,7 +119,7 @@ public class RecruiterService
 
     public CvAnalysis searchDesignation(String designation)
     {
-        query  = "select applications.designation,count(applications.designation),date,status from applications,technologies where applications.designation = technologies.designation and applications.designation=? and applications.deleted = 0 and technologies.deleted = 0 group by applications.designation";
+        query  = "select Applications.designation,count(Applications.designation),date,status from Applications inner join Technologies using(designation) where Applications.designation=? and Applications.deleted = 0 and Technologies.deleted = 0 group by Technologies.designation";
         try {
             return jdbcTemplate.queryForObject(query,
                     (resultSet, no) -> {
@@ -151,7 +131,8 @@ public class RecruiterService
                         cvAnalysis.setLocations(getLocationsByDesignation(designation));
                         return cvAnalysis;
                     }, designation);
-        } catch (DataAccessException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
     }
@@ -162,57 +143,58 @@ public class RecruiterService
     }
 
     public List<String> getLocationsByDesignation(String designation){
-        query = "select location from location where designation = ? and deleted = 0";
+        query = "select location from Locations where designation = ? and deleted = 0";
         return jdbcTemplate.queryForList(query, String.class, designation);
     }
 
-    public ExtendedCV getBasicCVDetails(int applicationId){
+    public ExtendedCV getBasicCVDetails(int candidateId){
         try{
-            query = "select " + applicationId + " as applicationId, name, dob, mobileNumber, CandidateProfile.emailId, jobLocation, position, expYear, expMonth, candidateType, contactPerson, languagesKnown, softwaresWorked, skills, about, expectedCTC, attachmentUrl, imageUrl from CandidateProfile inner join documents using(date) inner join applications using(date) inner join assignboard using(applicationId)  where assignboard.recruiterEmail= ? and applications.applicationId = ? and CandidateProfile.deleted = 0 and documents.deleted = 0 and Applications.deleted = 0 and AssignBoard.deleted = 0";
-            return jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(ExtendedCV.class), MemberService.getCurrentUser(), applicationId);
+            query = "select " + candidateId + " as candidateId, name, dob, mobileNumber,emailId, jobLocation, position, expYear, expMonth, candidateType, contactPerson, languagesKnown, softwaresWorked, skills, about, expectedCTC, attachmentUrl, imageUrl from CandidatesProfile inner join Documents using(candidateId) inner join Assignboard using(candidateId)  where recruiterEmail= ? and CandidatesProfile.candidateId = ? and CandidatesProfile.deleted = 0 and Documents.deleted = 0 and Assignboard.deleted = 0";
+            return jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(ExtendedCV.class), MemberService.getCurrentUser(), candidateId);
         } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
     }
 
-    public List<Education> getEducationsHistory(int applicationId){
-        query = "select * from Education inner join applications using(date) where applicationId = ? and applications.deleted = 0 and education.deleted = 0";
+    public List<Education> getEducationsHistory(int candidateId){
+        query = "select * from Educations where candidateId = ? and deleted = 0";
         try {
-            return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(Education.class), applicationId);
+            return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(Education.class), candidateId);
         } catch (Exception e) {
             return null;
         }
     }
 
-    public List<WorkHistory> getWorkHistory(int applicationId){
-        query = "select * from WorkHistory inner join applications using(date) where applicationId = ? and applications.deleted = 0 and workHistory.deleted = 0";
+    public List<WorkHistory> getWorkHistory(int candidateId){
+        query = "select * from WorkHistories where candidateId = ? and deleted = 0";
         try{
-            return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(WorkHistory.class), applicationId);
+            return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(WorkHistory.class), candidateId);
         } catch (Exception e) {
             return null;
         }
     }
 
-    public List<Link> getSocialLinks(int applicationId){
-        query = "select * from Links inner join applications using(date) where applicationId = ? and applications.deleted = 0 and Links.deleted = 0";
+    public List<Link> getSocialLinks(int candidateId){
+        query = "select * from Links  where candidateId = ? and deleted = 0";
         try{
-            return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(Link.class), applicationId);
+            return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(Link.class), candidateId);
         } catch (Exception e) {
             return null;
         }
     }
 
-    public String downloadCV(int applicationId){
-        query = "select attachmentUrl from documents inner join applications using(date) where applicationId = ? and applications.deleted = 0 and documents.deleted = 0";
+    public String downloadCV(int candidateId){
+        query = "select attachmentUrl from Documents inner join Assignboard using(candidateId) where candidateId = ? and recruiterEmail = ? and Documents.deleted = 0 and Assignboard.deleted = 0";
         try{
-            return jdbcTemplate.queryForObject(query, String.class, applicationId);
-        } catch (DataAccessException e) {
-            return null;
+            return jdbcTemplate.queryForObject(query, String.class, candidateId, MemberService.getCurrentUser());
+        } catch (Exception e) {
+            return "";
         }
     }
 
     public List<TopTechnologies> getTopTechnologies(String designation) {
-        query = "select technologies.designation,location.location from technologies left join location using(designation) left join applications using(designation) where designation != ? and Technologies.deleted = 0 and Location.deleted = 0 and Applications.deleted = 0 group by technologies.designation order by count(applications.designation) desc limit 5";
+        query = "select Technologies.designation,Locations.location from Technologies left join Locations using(designation) left join Applications using(designation) where Applications.designation != ? and Technologies.deleted = 0 and Locations.deleted = 0 and Applications.deleted = 0 group by Technologies.designation order by count(Applications.designation) desc limit 5";
         List<TopTechnologies> topTechnologies = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(TopTechnologies.class),designation);
         List<String> locations = getLocationsByDesignation(designation);
         TopTechnologies technologies = new TopTechnologies(designation,locations);
@@ -220,11 +202,14 @@ public class RecruiterService
         return topTechnologies;
     }
 
-    public String getLastJobPosition(int applicationId) {
-        System.out.println("yo");
-        query = "select position from workHistory inner join applications using(date) where date = (select date from applications where applicationId = ?) order by fromDate desc";
-        List<String> positions = jdbcTemplate.queryForList(query,String.class,applicationId);
-        return positions.get(0);
+    public String getLastJobPosition(int candidateId) {
+        query = "select position from WorkHistories where candidateId = ? order by fromDate desc limit 1";
+        try {
+            return jdbcTemplate.queryForObject(query, String.class, candidateId);
+        } catch (Exception e) {
+            return null;
+        }
+
     }
 
     //count mistake
@@ -233,20 +218,20 @@ public class RecruiterService
         int offset = (pageNo - 1) * limit;
         int totalCount = 0;
         if(pageNo == 1){
-            query = "select count(distinct Applications.applicationId) from CandidateProfile inner join documents using(date) inner join Applications using(date) inner join Assignboard using(applicationId) where recruiterEmail = ? and assignboard.status = ? and applications.designation = ? and CandidateProfile.deleted = 0 and Documents.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0";
+            query = "select count(distinct Applications.candidateId) from CandidatesProfile inner join Documents using(candidateId) inner join Applications using(candidateId) inner join Assignboard using(candidateId) where recruiterEmail = ? and Assignboard.status = ? and Applications.designation = ? and CandidatesProfile.deleted = 0 and Documents.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0";
             totalCount = jdbcTemplate.queryForObject(query, Integer.class, MemberService.getCurrentUser(), status, designation);
         }
 
-        query = "select Applications.applicationId, CandidateProfile.name, imageUrl, skills, position from CandidateProfile inner join documents using(date) inner join Applications using(date) inner join Assignboard using(applicationId) where recruiterEmail = ? and assignboard.status = ? and applications.designation = ? and CandidateProfile.deleted = 0 and Documents.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0 group by Applications.applicationId limit ?, ?";
+        query = "select CandidatesProfile.candidateId, name, imageUrl, skills, position from CandidatesProfile inner join Documents using(candidateId) inner join Applications using(candidateId) inner join Assignboard using(candidateId) where recruiterEmail = ? and Assignboard.status = ? and Applications.designation = ? and CandidatesProfile.deleted = 0 and Documents.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0 group by Applications.applicationId limit ?, ?";
         List<ProfileAnalysis> profileAnalyses = new ArrayList<>();
         try {
             jdbcTemplate.query(query,
                     (resultSet, no) -> {
                         ProfileAnalysis profileAnalysis = new ProfileAnalysis();
-                        profileAnalysis.setApplicationId(resultSet.getInt(1));
+                        profileAnalysis.setCandidateId(resultSet.getInt(1));
                         profileAnalysis.setName(resultSet.getString(2));
                         profileAnalysis.setImageUrl(resultSet.getString(3));
-                        profileAnalysis.setPosition(getLastJobPosition(profileAnalysis.getApplicationId()));
+                        profileAnalysis.setPosition(getLastJobPosition(profileAnalysis.getCandidateId()));
                         profileAnalysis.setSkills(resultSet.getString(5));
                         profileAnalyses.add(profileAnalysis);
                         return profileAnalysis;
@@ -266,34 +251,35 @@ public class RecruiterService
 
     public List<Applications> getNotAssignedApplicants()
     {
-        query = "select applications.applicationId,emailId,designation,location,date from applications,assignBoard where applications.applicationId=assignBoard.applicationId and organizerEmail is null and applications.deleted = 0 and assignboard.deleted = 0";
-        return jdbcTemplate.query(query,new BeanPropertyRowMapper<>(Applications.class));
+        query = "select Assignboard.candidateId, imageUrl,emailId,mobileNumber,designation,location,date from Assignboard inner join Applications using(candidateId) inner join CandidatesProfile using(candidateId) inner join Documents using(candidateId) where organizerEmail is null and recruiterEmail = ? and Applications.deleted = 0 and Assignboard.deleted = 0 and CandidatesProfile.deleted = 0 and Documents.deleted = 0";
+        return jdbcTemplate.query(query,new BeanPropertyRowMapper<>(Applications.class), MemberService.getCurrentUser());
     }
 
     public String assignOrganizer(AssignBoard assignBoard)
     {
         try {
-            query = "Select count(*) from AssignBoard where ApplicationId = ? and recruiterEmail = ? and status = 'rejected' and deleted = 0";
-            int count = jdbcTemplate.queryForObject(query, Integer.class, assignBoard.getApplicationId(), MemberService.getCurrentUser());
+            query = "Select count(*) from Assignboard where candidateId = ? and recruiterEmail = ? and status = 'rejected' and deleted = 0";
+            int count = jdbcTemplate.queryForObject(query, Integer.class, assignBoard.getCandidateId(), MemberService.getCurrentUser());
             if(count == 0) {
-                query = "select name from memberProfile where emailId=? and position=?";
-                jdbcTemplate.queryForObject(query, String.class, assignBoard.getOrganizerEmail(), "Organizer");
-                query = "select applicationId from assignBoard where recruiterEmail=? and applicationId=?";
-                jdbcTemplate.queryForObject(query, Integer.class, MemberService.getCurrentUser(), assignBoard.getApplicationId());
+                query = "select name from MembersProfile where emailId=? and position=?";
+                jdbcTemplate.queryForObject(query, String.class, assignBoard.getOrganizerEmail(), "ORGANIZER");
+                query = "select candidateId from Assignboard where recruiterEmail=? and candidateId=?";
+                jdbcTemplate.queryForObject(query, Integer.class, MemberService.getCurrentUser(), assignBoard.getCandidateId());
                 try {
-                    query = "update assignBoard set organizerEmail =?, assignDate=curDate(), status = 'new' where recruiterEmail=? and applicationId=?";
-                    jdbcTemplate.update(query, assignBoard.getOrganizerEmail(), MemberService.getCurrentUser(), assignBoard.getApplicationId());
+                    query = "update Assignboard set organizerEmail =?, assignDate=curDate(), status = 'NEW' where recruiterEmail=? and candidateId=?";
+                    jdbcTemplate.update(query, assignBoard.getOrganizerEmail(), MemberService.getCurrentUser(), assignBoard.getCandidateId());
                     return "Candidate assigned successfully";
                 } catch (Exception e) {
                     return "Give correct information";
                 }
             }
             else{
-                query = "update assignBoard set status='new' where ApplicationId = ? and recruiterEmail = ? and status = 'rejected' and deleted = 0";
-                jdbcTemplate.update(query, assignBoard.getApplicationId(),MemberService.getCurrentUser());
+                query = "update Assignboard set status='NEW' where candidateId = ? and recruiterEmail = ? and status = 'REJECTED' and deleted = 0";
+                jdbcTemplate.update(query, assignBoard.getCandidateId(),MemberService.getCurrentUser());
                 return "Updated";
             }
         } catch (Exception e) {
+            e.printStackTrace();
             return "Select correct Recruiter/Organizer to assign";
         }
     }
@@ -303,10 +289,10 @@ public class RecruiterService
         int offset = (pageNo - 1) * limit;
         int totalCount = 0;
         if(pageNo == 1){
-            query = "select count(distinct Applications.applicationId) from memberProfile inner join assignBoard on memberProfile.emailId=assignBoard.organizerEmail inner join applications on assignBoard.applicationId=applications.applicationId inner join candidateProfile on candidateProfile.emailId=applications.emailId where recruiterEmail=? and MemberProfile.deleted = 0 and CandidateProfile.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0";
+            query = "select count(distinct Applications.candidateId) from MembersProfile inner join Assignboard on MembersProfile.emailId=organizerEmail inner join Applications on AssignBoard.candidateId=Applications.candidateId inner join CandidatesProfile on CandidatesProfile.candidateId=applications.candidateId where recruiterEmail=? and status = 'NEW' and MembersProfile.deleted = 0 and CandidatesProfile.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0";
             totalCount = jdbcTemplate.queryForObject(query, Integer.class, MemberService.getCurrentUser());
         }
-        query = "select candidateProfile.name,applications.designation,applications.location,assignBoard.assignDate,memberProfile.name as organizer  from memberProfile inner join assignBoard on memberProfile.emailId=assignBoard.organizerEmail inner join applications on assignBoard.applicationId=applications.applicationId inner join candidateProfile on candidateProfile.emailId=applications.emailId where recruiterEmail=? and status = 'new' and MemberProfile.deleted = 0 and CandidateProfile.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0 group by Applications.applicationId limit ?, ?";
+        query = "select CandidatesProfile.candidateId,CandidatesProfile.name,Applications.designation,Applications.location,AssignBoard.assignDate,MembersProfile.name as organizer  from MembersProfile inner join Assignboard on MembersProfile.emailId=organizerEmail inner join Applications on AssignBoard.candidateId=Applications.candidateId inner join CandidatesProfile on CandidatesProfile.candidateId=applications.candidateId where recruiterEmail=? and status = 'NEW' and MembersProfile.deleted = 0 and CandidatesProfile.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0 group by Applications.candidateId limit ?, ?";
         List<AssignBoardPage> assignBoardPages = jdbcTemplate.query(query,new BeanPropertyRowMapper<>(AssignBoardPage.class),MemberService.getCurrentUser(), offset, limit);
 
         if(pageNo == 1){
@@ -320,11 +306,11 @@ public class RecruiterService
         int offset = (pageNo - 1) * limit;
         int totalCount = 0;
         if(pageNo == 1){
-            query = "select count(distinct Applications.applicationId) from documents inner join candidateProfile on documents.emailId=candidateProfile.emailId inner join applications on candidateProfile.emailId=applications.emailId inner join assignBoard on applications.applicationId=assignBoard.applicationId where assignBoard.status=? and assignBoard.recruiterEmail=? and Documents.deleted = 0 and CandidateProfile.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0";
-            totalCount = jdbcTemplate.queryForObject(query, Integer.class, "Rejected", MemberService.getCurrentUser());
+            query = "select count(distinct Applications.candidateId) from Documents inner join CandidatesProfile using(candidateId) inner join Applications using(candidateId) inner join Assignboard using(candidateId) where AssignBoard.status=? and Assignboard.recruiterEmail=? and Documents.deleted = 0 and CandidatesProfile.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0";
+            totalCount = jdbcTemplate.queryForObject(query, Integer.class, "REJECTED", MemberService.getCurrentUser());
         }
 
-        query = "select Applications.applicationId, candidateProfile.name,documents.ImageUrl,applications.location,candidateProfile.mobileNumber from documents inner join candidateProfile on documents.emailId=candidateProfile.emailId inner join applications on candidateProfile.emailId=applications.emailId inner join assignBoard on applications.applicationId=assignBoard.applicationId where assignBoard.status=? and assignBoard.recruiterEmail=? and Documents.deleted = 0 and CandidateProfile.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0 group by applications.applicationId limit ?,?";
+        query = "select Applications.candidateId, name,imageUrl,Applications.location,mobileNumber from Documents inner join CandidatesProfile using(candidateId) inner join Applications using(candidateId) inner join Assignboard using(candidateId) where AssignBoard.status=? and Assignboard.recruiterEmail=? and Documents.deleted = 0 and CandidatesProfile.deleted = 0 and Assignboard.deleted = 0 and Applications.deleted = 0 group by Applications.candidateId limit ?,?";
         List<RejectedCv> rejectedCvList = new ArrayList<>();
         try {
             jdbcTemplate.query(query,
@@ -339,7 +325,7 @@ public class RecruiterService
                         list.setMobileNumber(resultSet.getLong(5));
                         rejectedCvList.add(list);
                         return list;
-                    },"Rejected",MemberService.getCurrentUser(), offset, limit);
+                    },"REJECTED",MemberService.getCurrentUser(), offset, limit);
 
             if(pageNo == 1){
                 return List.of(totalCount, rejectedCvList.size(), rejectedCvList);
@@ -356,26 +342,27 @@ public class RecruiterService
     {
         Invite invite=new Invite();
         try {
-            query = "select count(*) from candidateInvites where date=curDate() and fromEmail=?";
+            query = "select count(*) from CandidatesInvites where date=curDate() and fromEmail=? and deleted = 0";
             invite.setToday(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
 
-            query = "select count(*) from candidateInvites where date=DATE_SUB(curDATE(),INTERVAL 1 DAY) and fromEmail=?";
+            query = "select count(*) from CandidatesInvites where date=DATE_SUB(curDATE(),INTERVAL 1 DAY) and fromEmail=? and deleted = 0";
             invite.setYesterday(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
 
-            query = "select count(*) from candidateInvites where month(date)=month(curDate())-1 and year(date)=year(curDate()) and fromEmail=?";
+            query = "select count(*) from CandidatesInvites where month(date)=month(curDate())-1 and year(date)=year(curDate()) and fromEmail=? and deleted = 0";
             invite.setPastMonth(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
 
-            query = "select count(*) from candidateInvites where month(date)=month(curDate())-2 and year(date)=year(curDate()) and fromEmail=?";
+            query = "select count(*) from CandidatesInvites where month(date)=month(curDate())-2 and year(date)=year(curDate()) and fromEmail=? and deleted = 0";
             invite.setTwoMonthBack(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
 
-            query = "select count(*) from candidateInvites where year(date)=year(curDate())-1 and fromEmail=?";
-            invite.setPassYear(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
+            query = "select count(*) from CandidatesInvites where year(date)=year(curDate())-1 and fromEmail=? and deleted = 0";
+            invite.setPastYear(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
 
-            query = "select count(*) from candidateInvites where year(date)=year(curDate())-2 and fromEmail=?";
+            query = "select count(*) from CandidatesInvites where year(date)=year(curDate())-2 and fromEmail=? and deleted = 0";
             invite.setTwoYearBack(jdbcTemplate.queryForObject(query, Integer.class,MemberService.getCurrentUser()));
 
             return invite;
         } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
 
@@ -386,10 +373,10 @@ public class RecruiterService
         int offset = (pageNo - 1) * limit;
         int totalCount = 0;
         if(pageNo == 1){
-            query = "select count(*) from candidateInvites where date=? and fromEmail=?";
+            query = "select count(*) from CandidatesInvites where date=? and fromEmail=?";
             totalCount = jdbcTemplate.queryForObject(query, Integer.class, date, MemberService.getCurrentUser());
         }
-        query = "select inviteId, candidateName as name,designation,location,CandidateEmail as email from candidateInvites where date=? and fromEmail=? limit ?, ?";
+        query = "select candidateInviteId, candidateName as name,designation,location,CandidateEmail as email from CandidatesInvites where date=? and fromEmail=? limit ?, ?";
         List<SentInvites> sentInvites = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvites.class),date,MemberService.getCurrentUser(), offset, limit);
 
         if(pageNo == 1){
@@ -404,10 +391,10 @@ public class RecruiterService
         int offset = (pageNo - 1) * limit;
         int totalCount = 0;
         if(pageNo == 1){
-            query = "select count(*) from candidateInvites where month(date)=? and year(date)=? and fromEmail=?";
+            query = "select count(*) from CandidatesInvites where month(date)=? and year(date)=? and fromEmail=?";
             totalCount = jdbcTemplate.queryForObject(query, Integer.class, date.toLocalDate().getMonthValue(), date.toLocalDate().getYear(), MemberService.getCurrentUser());
         }
-        query = "select inviteId, candidateName as name,designation,location,CandidateEmail as email from candidateInvites where month(date)=? and year(date)=? and fromEmail=? limit ?, ?";
+        query = "select candidateInviteId, candidateName as name,designation,location,CandidateEmail as email from CandidatesInvites where month(date)=? and year(date)=? and fromEmail=? limit ?, ?";
         List<SentInvites> sentInvites = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvites.class), date.toLocalDate().getMonthValue(),date.toLocalDate().getYear(), MemberService.getCurrentUser(), offset, limit);
 
         if(pageNo == 1){
@@ -422,11 +409,11 @@ public class RecruiterService
         int offset = (pageNo - 1) * limit;
         int totalCount = 0;
         if(pageNo == 1){
-            query = "select count(*) from candidateInvites where year(date)=? and fromEmail=?";
+            query = "select count(*) from CandidatesInvites where year(date)=? and fromEmail=?";
             totalCount = jdbcTemplate.queryForObject(query, Integer.class, date.toLocalDate().getYear(), MemberService.getCurrentUser());
         }
 
-        query = "select inviteId, candidateName as name,designation,location,CandidateEmail as email from candidateInvites where year(date)=? and fromEmail=? limit ?, ?";
+        query = "select candidateInviteId, candidateName as name,designation,location,CandidateEmail as email from CandidatesInvites where year(date)=? and fromEmail=? limit ?, ?";
         List<SentInvites> sentInvites = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvites.class),date.toLocalDate().getYear(),MemberService.getCurrentUser(), offset, limit);
 
         if(pageNo == 1){

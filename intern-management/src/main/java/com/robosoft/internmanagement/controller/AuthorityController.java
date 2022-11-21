@@ -1,9 +1,10 @@
 package com.robosoft.internmanagement.controller;
 
-import com.robosoft.internmanagement.modelAttributes.Applications;
+import com.robosoft.internmanagement.model.Applications;
 import com.robosoft.internmanagement.modelAttributes.AssignBoard;
 import com.robosoft.internmanagement.service.AuthorityService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,7 +16,12 @@ public class AuthorityController
     @Autowired
     AuthorityService authorityService;
 
-    @GetMapping("/all-applicants")
+    @GetMapping("/available-recruiters")
+    public ResponseEntity<?> getAllRecruiters(){
+        return ResponseEntity.ok(authorityService.getAllRecruiters());
+    }
+
+    @GetMapping("/applicants")
     public List<Applications> allApplicants()
     {
         return authorityService.getApplicants();

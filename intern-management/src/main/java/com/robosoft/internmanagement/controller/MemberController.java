@@ -1,5 +1,7 @@
 package com.robosoft.internmanagement.controller;
 
+import com.robosoft.internmanagement.model.LoggedProfile;
+import com.robosoft.internmanagement.model.NotificationDisplay;
 import com.robosoft.internmanagement.modelAttributes.Event;
 import com.robosoft.internmanagement.service.MemberService;
 import com.robosoft.internmanagement.service.StorageService;
@@ -28,6 +30,18 @@ public class MemberController {
 
     @Autowired
     private MemberService memberService;
+
+    @GetMapping("/logged-profile")
+    public LoggedProfile getProfile()
+    {
+        return memberService.getProfile();
+    }
+
+    @GetMapping("/notification-display")
+    public NotificationDisplay getNotifications()
+    {
+        return memberService.notification();
+    }
 
     @GetMapping("/notifications")
     public ResponseEntity<?> getNotifications(@RequestParam int pageNo, @RequestParam int limit){
@@ -71,6 +85,5 @@ public class MemberController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
     }
-
 
 }
