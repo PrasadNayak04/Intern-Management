@@ -1,5 +1,6 @@
 package com.robosoft.internmanagement.service.jwtSecurity;
 
+import com.robosoft.internmanagement.service.MemberService;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

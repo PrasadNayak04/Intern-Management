@@ -32,36 +32,36 @@ public class MemberController {
     private MemberService memberService;
 
     @GetMapping("/logged-profile")
-    public LoggedProfile getProfile()
+    public LoggedProfile getProfile(HttpServletRequest request)
     {
-        return memberService.getProfile();
+        return memberService.getProfile(request);
     }
 
     @GetMapping("/notification-display")
-    public NotificationDisplay getNotifications()
+    public NotificationDisplay getNotifications(HttpServletRequest request)
     {
-        return memberService.notification();
+        return memberService.notification(request);
     }
 
     @GetMapping("/notifications")
-    public ResponseEntity<?> getNotifications(@RequestParam int pageNo, @RequestParam int limit){
+    public ResponseEntity<?> getNotifications(@RequestParam int pageNo, @RequestParam int limit, HttpServletRequest request){
         if(!memberService.validPageDetails(pageNo, limit)){
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Invalid page details");
         }
-        return ResponseEntity.ok(memberService.getNotifications(pageNo, limit));
+        return ResponseEntity.ok(memberService.getNotifications(pageNo, limit, request));
     }
 
     @PostMapping("/event-creation")
-    public ResponseEntity<?> createEvent(@ModelAttribute Event event){
-        if(memberService.createEvent(event)){
+    public ResponseEntity<?> createEvent(@ModelAttribute Event event, HttpServletRequest request){
+        if(memberService.createEvent(event, request)){
             return ResponseEntity.status(HttpStatus.CREATED).body("Event created successfully");
         }
         return ResponseEntity.status(HttpStatus.CONFLICT).body("Event creation failed!");
     }
 
     @PatchMapping("/event-status-update")
-    public ResponseEntity<?> reactEventInvite(@RequestParam int notificationId, @RequestParam String status){
-        if(memberService.reactToEventInvite(notificationId, status)) {
+    public ResponseEntity<?> reactEventInvite(@RequestParam int notificationId, @RequestParam String status, HttpServletRequest request){
+        if(memberService.reactToEventInvite(notificationId, status, request)) {
             return ResponseEntity.ok("Invitation status updated");
         }
         return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Failed to update invitation status");

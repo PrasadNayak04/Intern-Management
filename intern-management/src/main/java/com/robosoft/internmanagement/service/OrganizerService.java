@@ -7,14 +7,19 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
+
 @Service
 public class OrganizerService
 {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
-    public String takeInterview(AssignBoard board){
-        if(!(MemberService.getCurrentUser().equals(board.getOrganizerEmail()))){
+    @Autowired
+    private MemberService memberService;
+
+    public String takeInterview(AssignBoard board, HttpServletRequest request){
+        if(!(memberService.getUserNameFromRequest(request).equals(board.getOrganizerEmail()))){
             return "You can only take interviews which are assigned to you.";
         }
         try{

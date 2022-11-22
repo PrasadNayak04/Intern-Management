@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.sql.Date;
 import java.util.List;
 import java.util.Optional;
@@ -30,9 +31,9 @@ public class RecruiterController
     private MemberService memberService;
 
     @PostMapping("/candidate-invitation")
-    public ResponseEntity<String> invites(@ModelAttribute CandidateInvite invites)
+    public ResponseEntity<String> invites(@ModelAttribute CandidateInvite invites, HttpServletRequest request)
     {
-        boolean result = emailService.sendInviteEmail(invites);
+        boolean result = emailService.sendInviteEmail(invites, request);
 
         if (result){
             return ResponseEntity.ok().body("Invite sent to " + invites.getCandidateName());
@@ -47,24 +48,24 @@ public class RecruiterController
     }
 
     @GetMapping("/organizers")
-    public ResponseEntity<?> getOrganizersList(@RequestParam (required = false) Integer limit)
+    public ResponseEntity<?> getOrganizersList(@RequestParam (required = false) Integer limit, HttpServletRequest request)
     {
         if(!memberService.validPageDetails(1, limit)){
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Invalid limit count");
         }
-        return ResponseEntity.ok(recruiterService.getOrganizer(limit));
+        return ResponseEntity.ok(recruiterService.getOrganizer(limit, request));
     }
 
     @GetMapping("/summary")
-    public Summary getSummary(@RequestParam Date date)
+    public Summary getSummary(@RequestParam Date date, HttpServletRequest request)
     {
-        return recruiterService.getSummary(date);
+        return recruiterService.getSummary(date, request);
     }
 
     @GetMapping("/cv-count")
-    public int getCv()
+    public int getCv(HttpServletRequest request)
     {
-        return recruiterService.cvCount();
+        return recruiterService.cvCount(request);
     }
 
     @GetMapping("/cv-analysis")
@@ -96,8 +97,8 @@ public class RecruiterController
     }
 
     @GetMapping("/extended-cv/{candidateId}")
-    public ResponseEntity<?> getExtendedCV(@PathVariable int candidateId){
-        ExtendedCV extendedCV = recruiterService.getBasicCVDetails(candidateId);
+    public ResponseEntity<?> getExtendedCV(@PathVariable int candidateId,HttpServletRequest request){
+        ExtendedCV extendedCV = recruiterService.getBasicCVDetails(candidateId, request);
         if(extendedCV == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No candidate found with application Id " + candidateId);
         }
@@ -108,8 +109,8 @@ public class RecruiterController
     }
 
     @GetMapping("/resume-url/{candidateId}")
-    public ResponseEntity<?> getResumeDownloadUrl(@PathVariable int candidateId){
-        String url = recruiterService.downloadCV(candidateId);
+    public ResponseEntity<?> getResumeDownloadUrl(@PathVariable int candidateId, HttpServletRequest request){
+        String url = recruiterService.downloadCV(candidateId, request);
         if(url.equals(""))
         {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -119,23 +120,23 @@ public class RecruiterController
 
     //pagination
     @GetMapping("/profiles/{designation}/{status}")
-    public ResponseEntity<?> getProfileBasedOnStatus(@PathVariable String designation, @PathVariable String status, @RequestParam int pageNo, @RequestParam int limit) {
+    public ResponseEntity<?> getProfileBasedOnStatus(@PathVariable String designation, @PathVariable String status, @RequestParam int pageNo, @RequestParam int limit, HttpServletRequest request) {
         if(!memberService.validPageDetails(pageNo, limit)){
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Invalid page details");
         }
-        return ResponseEntity.status(HttpStatus.FOUND).body(recruiterService.getProfileBasedOnStatus(designation, status, pageNo, limit));
+        return ResponseEntity.status(HttpStatus.FOUND).body(recruiterService.getProfileBasedOnStatus(designation, status, pageNo, limit, request));
     }
 
     @GetMapping("/applicants")
-    public List<Application> getApplicants()
+    public List<Application> getApplicants(HttpServletRequest request)
     {
-        return recruiterService.getNotAssignedApplicants();
+        return recruiterService.getNotAssignedApplicants(request);
     }
 
     @PutMapping("/organizer-assignation")
-    public ResponseEntity<?> setOrganizer(@ModelAttribute AssignBoard assignBoard)
+    public ResponseEntity<?> setOrganizer(@ModelAttribute AssignBoard assignBoard, HttpServletRequest request)
     {
-        String result = recruiterService.assignOrganizer(assignBoard);
+        String result = recruiterService.assignOrganizer(assignBoard, request);
         if(result==null)
         {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -144,22 +145,22 @@ public class RecruiterController
     }
 
     @GetMapping("/assignboard")
-    public ResponseEntity<?> getPage(@RequestParam int pageNo, @RequestParam int limit)
+    public ResponseEntity<?> getPage(@RequestParam int pageNo, @RequestParam int limit, HttpServletRequest request)
     {
         if(!memberService.validPageDetails(pageNo, limit)){
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Invalid page details");
         }
-        return ResponseEntity.ok(recruiterService.getAssignBoardPage(pageNo, limit));
+        return ResponseEntity.ok(recruiterService.getAssignBoardPage(pageNo, limit, request));
     }
 
     @GetMapping("/rejected-cv")
-    public ResponseEntity<?> getCvPage(@RequestParam int pageNo, @RequestParam int limit)
+    public ResponseEntity<?> getCvPage(@RequestParam int pageNo, @RequestParam int limit, HttpServletRequest request)
     {
         if(!memberService.validPageDetails(pageNo, limit)){
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Invalid page details");
         }
 
-        List<?> rejectedCvs = recruiterService.getRejectedCvPage(pageNo, limit);
+        List<?> rejectedCvs = recruiterService.getRejectedCvPage(pageNo, limit, request);
         if(rejectedCvs.size() > 0){
             return ResponseEntity.status(HttpStatus.FOUND).body(rejectedCvs);
         }
@@ -167,45 +168,47 @@ public class RecruiterController
     }
 
     @GetMapping("/invites-info")
-    public ResponseEntity<Invite> getInfo()
+    public ResponseEntity<Invite> getInfo(HttpServletRequest request)
     {
-        if(recruiterService.getInviteInfo() == null){
+        Invite invite = recruiterService.getInviteInfo(request);
+
+        if(invite == null){
             ResponseEntity.status(HttpStatus.NO_CONTENT);
         }
-        return ResponseEntity.ok(recruiterService.getInviteInfo());
+        return ResponseEntity.ok(invite);
     }
 
     @GetMapping("/invites-by-day")
-    public ResponseEntity<?> getByDay(@RequestParam Date date, @RequestParam int pageNo, @RequestParam int limit)
+    public ResponseEntity<?> getByDay(@RequestParam Date date, @RequestParam int pageNo, @RequestParam int limit, HttpServletRequest request)
     {
         if(!memberService.validPageDetails(pageNo, limit)){
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Invalid page details");
         }
-        return ResponseEntity.ok(recruiterService.getByDay(date, pageNo, limit));
+        return ResponseEntity.ok(recruiterService.getByDay(date, pageNo, limit, request));
     }
 
     @GetMapping("/invites-by-month")
-    public ResponseEntity<?> getByMonth(@RequestParam Date date, @RequestParam int pageNo, @RequestParam int limit)
+    public ResponseEntity<?> getByMonth(@RequestParam Date date, @RequestParam int pageNo, @RequestParam int limit, HttpServletRequest request)
     {
         if(!memberService.validPageDetails(pageNo, limit)){
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Invalid page details");
         }
-        return ResponseEntity.ok(recruiterService.getByMonth(date, pageNo, limit));
+        return ResponseEntity.ok(recruiterService.getByMonth(date, pageNo, limit, request));
     }
 
     @GetMapping("/invites-by-year")
-    public ResponseEntity<?> getByYear(@RequestParam Date date, @RequestParam int pageNo, @RequestParam int limit)
+    public ResponseEntity<?> getByYear(@RequestParam Date date, @RequestParam int pageNo, @RequestParam int limit, HttpServletRequest request)
     {
         if(!memberService.validPageDetails(pageNo, limit)){
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Invalid page details");
         }
-        return ResponseEntity.ok(recruiterService.getByYear(date, pageNo, limit));
+        return ResponseEntity.ok(recruiterService.getByYear(date, pageNo, limit, request));
     }
 
     @PutMapping("/resend-invite")
-    public String resendInvite(@RequestParam int inviteId)
+    public String resendInvite(@RequestParam int inviteId, HttpServletRequest request)
     {
-        boolean result = emailService.resendInvite(inviteId);
+        boolean result = emailService.resendInvite(inviteId, request);
         if (result)
         {
             return "Invite sent";

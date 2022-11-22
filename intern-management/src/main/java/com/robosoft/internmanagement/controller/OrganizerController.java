@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
+
 @RestController
 @RequestMapping("/intern-management/organizer")
 public class OrganizerController
@@ -16,9 +18,9 @@ public class OrganizerController
     OrganizerService organizerService;
 
     @PutMapping("/interview")
-    public String assignStatus(@ModelAttribute AssignBoard board)
+    public String assignStatus(@ModelAttribute AssignBoard board, HttpServletRequest request)
     {
-        return organizerService.takeInterview(board);
+        return organizerService.takeInterview(board, request);
     }
 
 }
