@@ -93,7 +93,7 @@ public class CandidateService implements CandidateServices
     }
 
     public boolean isVacantPosition(String position){
-        String query = "select status from Technologies where designation = ?";
+        String query = "select status from Technologies where designation = ? and deleted = 0";
         try {
             String status = jdbcTemplate.queryForObject(query, String.class, position);
             if(status.equalsIgnoreCase("ACTIVE"))
