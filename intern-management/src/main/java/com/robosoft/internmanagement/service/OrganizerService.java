@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import javax.servlet.http.HttpServletRequest;
 
 @Service
-public class OrganizerService
+public class OrganizerService implements OrganizerServices
 {
     @Autowired
     JdbcTemplate jdbcTemplate;

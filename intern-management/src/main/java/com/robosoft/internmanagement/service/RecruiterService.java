@@ -17,7 +17,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Service
-public class RecruiterService
+public class RecruiterService implements RecruiterServices
 {
     @Autowired
     JdbcTemplate jdbcTemplate;
@@ -26,6 +26,7 @@ public class RecruiterService
     private MemberService memberService;
 
     String query;
+
 
     public List<?> getAllOrganizers(){
         query = "select emailId, name, photoUrl from MembersProfile where position = 'ORGANIZER'";

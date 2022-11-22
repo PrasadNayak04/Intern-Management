@@ -10,7 +10,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Service
-public class CandidateService {
+public class CandidateService implements CandidateServices
+{
     @Autowired
     JdbcTemplate jdbcTemplate;
     @Autowired
