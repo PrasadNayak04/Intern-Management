@@ -14,7 +14,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Service
-public class StorageService {
+public class StorageService implements StorageServices
+{
 
     private static final String UPLOADED_FOLDER = "src\\main\\resources\\static\\documents\\";
 
@@ -50,23 +51,6 @@ public class StorageService {
     public String generateDocumentUrl(String fileName){
         final String apiUrl = "http://localhost:8080/intern-management/member/fetch/";
         return apiUrl + fileName;
-    }
-
-    public Resource load(String filename) {
-
-        System.out.println("src\\main\\resources\\static\\documents\\".length());
-        try {
-            Path file = root.resolve(filename);
-            Resource resource = new UrlResource(file.toUri());
-
-            if (resource.exists() || resource.isReadable()) {
-                return resource;
-            } else {
-                throw new RuntimeException("Could not read the file!");
-            }
-        } catch (MalformedURLException e) {
-            throw new RuntimeException("Error: " + e.getMessage());
-        }
     }
 
     public String getContentType(HttpServletRequest request, Resource resource){

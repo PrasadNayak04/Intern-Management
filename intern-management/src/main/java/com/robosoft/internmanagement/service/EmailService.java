@@ -14,7 +14,8 @@ import java.time.LocalDate;
 import java.util.Random;
 
 @Service
-public class EmailService {
+public class EmailService implements EmailServices
+{
 
     @Autowired
     JdbcTemplate jdbcTemplate;

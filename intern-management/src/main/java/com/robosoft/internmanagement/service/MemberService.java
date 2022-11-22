@@ -17,7 +17,8 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 @Service
-public class MemberService {
+public class MemberService implements MemberServices
+{
 
     @Autowired
     private BeanStore beanStore;
@@ -246,6 +247,5 @@ public class MemberService {
         System.out.println(tokenManager);
         return tokenManager.getUsernameFromToken(token);
     }
-
 
 }

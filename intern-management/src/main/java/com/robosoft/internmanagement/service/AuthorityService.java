@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class AuthorityService
+public class AuthorityService implements AuthorityServices
 {
 
     @Autowired
@@ -61,6 +61,7 @@ public class AuthorityService
 
     }
 
+    @Override
     public List<?> getAllRecruiters(){
         query = "select emailId, name, photoUrl from MembersProfile where position = 'RECRUITER'";
         return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(MemberModel.class));
