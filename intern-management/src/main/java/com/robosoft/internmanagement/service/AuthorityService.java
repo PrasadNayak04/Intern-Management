@@ -1,6 +1,6 @@
 package com.robosoft.internmanagement.service;
 
-import com.robosoft.internmanagement.model.Applications;
+import com.robosoft.internmanagement.model.Application;
 import com.robosoft.internmanagement.model.MemberModel;
 import com.robosoft.internmanagement.modelAttributes.AssignBoard;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,10 +24,10 @@ public class AuthorityService
         return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(MemberModel.class));
     }
 
-    public List<Applications> getApplicants()
+    public List<Application> getApplicants()
     {
         query = "select candidateId, imageUrl, emailId, mobileNumber, designation,location,date from Applications inner join CandidatesProfile using(candidateId) inner join Documents using(candidateId) where candidateId NOT IN (select candidateId from Assignboard where Assignboard.deleted = 0) and Applications.deleted = 0 and Documents.deleted = 0 and CandidatesProfile.deleted = 0";
-        return jdbcTemplate.query(query,new BeanPropertyRowMapper<>(Applications.class));
+        return jdbcTemplate.query(query,new BeanPropertyRowMapper<>(Application.class));
     }
 
     public String assignRecruiter(AssignBoard assignBoard)

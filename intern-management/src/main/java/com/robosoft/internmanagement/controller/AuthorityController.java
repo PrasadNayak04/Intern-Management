@@ -1,6 +1,6 @@
 package com.robosoft.internmanagement.controller;
 
-import com.robosoft.internmanagement.model.Applications;
+import com.robosoft.internmanagement.model.Application;
 import com.robosoft.internmanagement.modelAttributes.AssignBoard;
 import com.robosoft.internmanagement.service.AuthorityService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,7 @@ public class AuthorityController
     }
 
     @GetMapping("/applicants")
-    public List<Applications> allApplicants()
+    public List<Application> allApplicants()
     {
         return authorityService.getApplicants();
     }

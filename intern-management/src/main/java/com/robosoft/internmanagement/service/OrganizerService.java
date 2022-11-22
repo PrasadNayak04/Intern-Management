@@ -1,7 +1,9 @@
 package com.robosoft.internmanagement.service;
 
+import com.robosoft.internmanagement.model.AssignBoardPage;
 import com.robosoft.internmanagement.modelAttributes.AssignBoard;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +23,18 @@ public class OrganizerService
 
             query = "update Assignboard set status=? where candidateId=? and organizerEmail=? and status=?";
             jdbcTemplate.update(query,board.getStatus(),board.getCandidateId(),board.getOrganizerEmail(),"NEW");
+
+            if(board.getStatus().equalsIgnoreCase("SHORTLISTED")){
+                query = "select designation, locations Applications where candidateId = ? and deleted = 0";
+                AssignBoardPage assignBoard = jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(AssignBoardPage.class), board.getCandidateId());
+
+                query = "update Locations set vacancy = vacancy - 1 where designation = ? and location = ?";
+                jdbcTemplate.update(query, assignBoard.getDesignation(), assignBoard.getLocation());
+
+                query = "update Technologies set vacancy = vacancy - 1 where designation = ?";
+                jdbcTemplate.update(query, assignBoard.getDesignation());
+
+            }
         }
         catch (Exception e)
         {

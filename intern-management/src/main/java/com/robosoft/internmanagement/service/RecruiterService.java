@@ -3,7 +3,6 @@ package com.robosoft.internmanagement.service;
 import com.robosoft.internmanagement.model.*;
 import com.robosoft.internmanagement.modelAttributes.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -21,6 +20,10 @@ public class RecruiterService
     JdbcTemplate jdbcTemplate;
 
     String query;
+
+    public boolean addTechnologies(){
+        return false;
+    }
 
     public List<?> getAllOrganizers(){
         query = "select emailId, name, photoUrl from MembersProfile where position = 'ORGANIZER'";
@@ -193,11 +196,11 @@ public class RecruiterService
         }
     }
 
-    public List<TopTechnologies> getTopTechnologies(String designation) {
+    public List<TopTechnology> getTopTechnologies(String designation) {
         query = "select Technologies.designation,Locations.location from Technologies left join Locations using(designation) left join Applications using(designation) where Applications.designation != ? and Technologies.deleted = 0 and Locations.deleted = 0 and Applications.deleted = 0 group by Technologies.designation order by count(Applications.designation) desc limit 5";
-        List<TopTechnologies> topTechnologies = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(TopTechnologies.class),designation);
+        List<TopTechnology> topTechnologies = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(TopTechnology.class),designation);
         List<String> locations = getLocationsByDesignation(designation);
-        TopTechnologies technologies = new TopTechnologies(designation,locations);
+        TopTechnology technologies = new TopTechnology(designation,locations);
         topTechnologies.add(0,technologies);
         return topTechnologies;
     }
@@ -249,10 +252,10 @@ public class RecruiterService
 
     }
 
-    public List<Applications> getNotAssignedApplicants()
+    public List<Application> getNotAssignedApplicants()
     {
         query = "select Assignboard.candidateId, imageUrl,emailId,mobileNumber,designation,location,date from Assignboard inner join Applications using(candidateId) inner join CandidatesProfile using(candidateId) inner join Documents using(candidateId) where organizerEmail is null and recruiterEmail = ? and Applications.deleted = 0 and Assignboard.deleted = 0 and CandidatesProfile.deleted = 0 and Documents.deleted = 0";
-        return jdbcTemplate.query(query,new BeanPropertyRowMapper<>(Applications.class), MemberService.getCurrentUser());
+        return jdbcTemplate.query(query,new BeanPropertyRowMapper<>(Application.class), MemberService.getCurrentUser());
     }
 
     public String assignOrganizer(AssignBoard assignBoard)
@@ -377,7 +380,7 @@ public class RecruiterService
             totalCount = jdbcTemplate.queryForObject(query, Integer.class, date, MemberService.getCurrentUser());
         }
         query = "select candidateInviteId, candidateName as name,designation,location,CandidateEmail as email from CandidatesInvites where date=? and fromEmail=? limit ?, ?";
-        List<SentInvites> sentInvites = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvites.class),date,MemberService.getCurrentUser(), offset, limit);
+        List<SentInvite> sentInvites = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvite.class),date,MemberService.getCurrentUser(), offset, limit);
 
         if(pageNo == 1){
             return List.of(totalCount, sentInvites.size(), sentInvites);
@@ -395,7 +398,7 @@ public class RecruiterService
             totalCount = jdbcTemplate.queryForObject(query, Integer.class, date.toLocalDate().getMonthValue(), date.toLocalDate().getYear(), MemberService.getCurrentUser());
         }
         query = "select candidateInviteId, candidateName as name,designation,location,CandidateEmail as email from CandidatesInvites where month(date)=? and year(date)=? and fromEmail=? limit ?, ?";
-        List<SentInvites> sentInvites = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvites.class), date.toLocalDate().getMonthValue(),date.toLocalDate().getYear(), MemberService.getCurrentUser(), offset, limit);
+        List<SentInvite> sentInvites = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvite.class), date.toLocalDate().getMonthValue(),date.toLocalDate().getYear(), MemberService.getCurrentUser(), offset, limit);
 
         if(pageNo == 1){
             return List.of(totalCount, sentInvites.size(), sentInvites);
@@ -414,7 +417,7 @@ public class RecruiterService
         }
 
         query = "select candidateInviteId, candidateName as name,designation,location,CandidateEmail as email from CandidatesInvites where year(date)=? and fromEmail=? limit ?, ?";
-        List<SentInvites> sentInvites = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvites.class),date.toLocalDate().getYear(),MemberService.getCurrentUser(), offset, limit);
+        List<SentInvite> sentInvites = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvite.class),date.toLocalDate().getYear(),MemberService.getCurrentUser(), offset, limit);
 
         if(pageNo == 1){
             return List.of(totalCount, sentInvites.size(), sentInvites);

@@ -1,9 +1,9 @@
 package com.robosoft.internmanagement.controller;
 
 import com.robosoft.internmanagement.model.*;
-import com.robosoft.internmanagement.model.Applications;
+import com.robosoft.internmanagement.model.Application;
 import com.robosoft.internmanagement.modelAttributes.AssignBoard;
-import com.robosoft.internmanagement.modelAttributes.CandidateInvites;
+import com.robosoft.internmanagement.modelAttributes.CandidateInvite;
 import com.robosoft.internmanagement.service.EmailService;
 import com.robosoft.internmanagement.service.MemberService;
 import com.robosoft.internmanagement.service.RecruiterService;
@@ -30,7 +30,7 @@ public class RecruiterController
     private MemberService memberService;
 
     @PostMapping("/candidate-invitation")
-    public ResponseEntity<String> invites(@ModelAttribute CandidateInvites invites)
+    public ResponseEntity<String> invites(@ModelAttribute CandidateInvite invites)
     {
         boolean result = emailService.sendInviteEmail(invites);
 
@@ -88,7 +88,7 @@ public class RecruiterController
     }
     @GetMapping("/top-technologies/{designation}")
     public ResponseEntity<?> getTopTechnologies(@PathVariable String designation) {
-        List<TopTechnologies> technologies = recruiterService.getTopTechnologies(designation);
+        List<TopTechnology> technologies = recruiterService.getTopTechnologies(designation);
         if(technologies.get(0).getLocation().size()==0) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Result not found for "+designation);
         }
@@ -127,7 +127,7 @@ public class RecruiterController
     }
 
     @GetMapping("/applicants")
-    public List<Applications> getApplicants()
+    public List<Application> getApplicants()
     {
         return recruiterService.getNotAssignedApplicants();
     }

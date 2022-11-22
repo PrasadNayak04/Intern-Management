@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @Data
 @AllArgsConstructor
 @RequiredArgsConstructor
-public class CandidateInvites
+public class CandidateInvite
 {
 
     private int candidateInviteId;

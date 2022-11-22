@@ -1,6 +1,6 @@
 package com.robosoft.internmanagement.service;
 
-import com.robosoft.internmanagement.modelAttributes.CandidateInvites;
+import com.robosoft.internmanagement.modelAttributes.CandidateInvite;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -97,7 +97,7 @@ public class EmailService {
         return "Invalid OTP";
     }
 
-    public boolean sendInviteEmail(CandidateInvites invites)
+    public boolean sendInviteEmail(CandidateInvite invites)
     {
         String subject = "Invite from Robosoft Technologies";
         String message = "Inviting to join us as a intern.";
@@ -131,7 +131,7 @@ public class EmailService {
         String message = "Inviting to join us as a intern.";
 
         String query = "select * from CandidatesInvites where candidateInviteId=?";
-        CandidateInvites invites = jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(CandidateInvites.class), inviteId);
+        CandidateInvite invites = jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(CandidateInvite.class), inviteId);
         try
         {
             String check = "select designation from CandidatesInvites where candidateInviteId=? and fromEmail=?";

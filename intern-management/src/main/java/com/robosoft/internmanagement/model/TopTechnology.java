@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @RequiredArgsConstructor
-public class TopTechnologies {
+public class TopTechnology {
     private String designation;
     private List<String> location;
 

@@ -2,7 +2,7 @@ package com.robosoft.internmanagement.service;
 
 import com.robosoft.internmanagement.model.LoggedProfile;
 import com.robosoft.internmanagement.model.NotificationDisplay;
-import com.robosoft.internmanagement.model.Notifications;
+import com.robosoft.internmanagement.model.Notification;
 import com.robosoft.internmanagement.modelAttributes.Event;
 import com.robosoft.internmanagement.modelAttributes.Member;
 import com.robosoft.internmanagement.modelAttributes.MemberProfile;
@@ -113,7 +113,7 @@ public class MemberService {
     public NotificationDisplay notification() {
         String notification = "select notificationId, message, date from Notifications where notificationId = ? and deleted = 0";
 
-        Notifications notifications = jdbcTemplate.queryForObject("select notificationId, type from Notifications where emailId=? and deleted = 0 order by notificationId desc limit 1", new BeanPropertyRowMapper<>(Notifications.class), MemberService.getCurrentUser());
+        Notification notifications = jdbcTemplate.queryForObject("select notificationId, type from Notifications where emailId=? and deleted = 0 order by notificationId desc limit 1", new BeanPropertyRowMapper<>(Notification.class), MemberService.getCurrentUser());
         int eventId = jdbcTemplate.queryForObject("select eventId from Notifications where notificationId = ? and deleted = 0", Integer.class, notifications.getNotificationId());
         if (notifications.getType().equalsIgnoreCase("INVITE")) {
             String profileImage = "select photoUrl from Notifications inner join EventsInvites using(eventId) inner join MembersProfile on EventsInvites.invitedEmail = MembersProfile.emailId where Notifications.eventId=? and type = 'INVITE' and MembersProfile.deleted = 0 and Notifications.deleted = 0 and EventsInvites.deleted = 0 group by invitedEmail";
@@ -204,7 +204,7 @@ public class MemberService {
             totalCount = jdbcTemplate.queryForObject(query, Integer.class, currentUser);
         }
         query = "select notificationId, message, date, type from Notifications where emailId = ? and deleted =0 order by notificationId desc limit ?, ?";
-        List<Notifications> notifications = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(Notifications.class), currentUser, offset, limit);
+        List<Notification> notifications = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(Notification.class), currentUser, offset, limit);
         if(pageNo ==1) {
             return List.of(totalCount, notifications.size(), notifications);
         }
