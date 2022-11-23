@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 
 public interface StorageServices
 {
-    String singleFileUpload(MultipartFile file, String email, HttpServletRequest request) throws Exception;
+    String singleFileUpload(MultipartFile file, String email, HttpServletRequest request, String position) throws Exception;
 
     String generateDocumentUrl(String fileName);
 

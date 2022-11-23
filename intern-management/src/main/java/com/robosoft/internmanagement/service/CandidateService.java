@@ -1,6 +1,7 @@
 package com.robosoft.internmanagement.service;
 
 import com.robosoft.internmanagement.modelAttributes.*;
+import com.robosoft.internmanagement.service.jwtSecurity.TokenManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,9 @@ public class CandidateService implements CandidateServices
     @Autowired
     StorageService storageService;
 
+    @Autowired
+    private TokenManager tokenManager;
+
     public String candidateRegister(CandidateProfile candidateProfile, HttpServletRequest request) throws Exception {
 
         if(!(isVacantPosition(candidateProfile.getPosition()))){
@@ -29,17 +33,17 @@ public class CandidateService implements CandidateServices
             String query1 = "insert into CandidatesProfile(name,dob,mobileNumber,emailId,jobLocation,gender,position,expYear,expMonth,candidateType,contactPerson,languagesKnown,softwaresWorked,skills,about,currentCTC,expectedCTC) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
             jdbcTemplate.update(query1, candidateProfile.getName(), candidateProfile.getDob(), candidateProfile.getMobileNumber(), candidateProfile.getEmailId(), candidateProfile.getJobLocation(), candidateProfile.getGender(), candidateProfile.getPosition(), candidateProfile.getExpYear(), candidateProfile.getExpMonth(), candidateProfile.getCandidateType(), candidateProfile.getContactPerson(), candidateProfile.getLanguagesKnown(), candidateProfile.getSoftwareWorked(), candidateProfile.getSkills(), candidateProfile.getAbout(), candidateProfile.getCurrentCTC(), candidateProfile.getExpectedCTC());
 
-            String photoRes = storageService.singleFileUpload(candidateProfile.getPhoto(), candidateProfile.getEmailId(), request);
+            candidateId = getCandidateId(candidateProfile.getEmailId());
+
+            String photoRes = storageService.singleFileUpload(candidateProfile.getPhoto(), candidateProfile.getEmailId(), request, "CANDIDATE");
             if (photoRes.equals("empty")) {
                 throw new Exception("File empty");
             }
 
-            String resumeRes = storageService.singleFileUpload(candidateProfile.getAttachment(), candidateProfile.getEmailId(), request);
+            String resumeRes = storageService.singleFileUpload(candidateProfile.getAttachment(), candidateProfile.getEmailId(), request, "CANDIDATE");
             if (resumeRes.equals("empty")) {
                 throw new Exception("File empty");
             }
-
-            candidateId = getCandidateId(candidateProfile.getEmailId());
 
             String documentUrlQuery = "insert into Documents(candidateId,attachmentUrl,imageUrl) values(?,?,?)";
             jdbcTemplate.update(documentUrlQuery, candidateId, resumeRes, photoRes);
@@ -74,7 +78,6 @@ public class CandidateService implements CandidateServices
             jdbcTemplate.update(insertToApplication,candidateId,candidateProfile.getPosition(),candidateProfile.getJobLocation(),date);
 
         } catch (Exception e) {
-            System.out.println(e);
             delCandidateQuery(candidateId);
             return "Save failed";
         }
@@ -83,11 +86,12 @@ public class CandidateService implements CandidateServices
     }
 
     public int getCandidateId(String candidateEmail){
-        String query = "select max(candidateId) from CandidatesProfile where emailId = ?";
+        String query = "select max(candidateId) from CandidatesProfile where emailId = ? and deleted = 0";
         return jdbcTemplate.queryForObject(query, Integer.class, candidateEmail);
     }
 
     public void delCandidateQuery(int candidateId) {
+        System.out.println("deleting " + candidateId);
         String delQuery = "delete from CandidatesProfile where candidateId = ?";
         jdbcTemplate.update(delQuery, candidateId);
     }

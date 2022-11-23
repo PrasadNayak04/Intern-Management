@@ -384,10 +384,10 @@ public class RecruiterService implements RecruiterServices
         int offset = (pageNo - 1) * limit;
         int totalCount = 0;
         if(pageNo == 1){
-            query = "select count(*) from CandidatesInvites where date=? and fromEmail=?";
+            query = "select count(*) from CandidatesInvites where date=? and fromEmail=? and deleted = 0";
             totalCount = jdbcTemplate.queryForObject(query, Integer.class, date, memberService.getUserNameFromRequest(request));
         }
-        query = "select candidateInviteId, candidateName as name,designation,location,CandidateEmail as email from CandidatesInvites where date=? and fromEmail=? limit ?, ?";
+        query = "select candidateInviteId, candidateName as name,designation,location,CandidateEmail as email from CandidatesInvites where date=? and fromEmail=? and deleted = 0 limit ?, ?";
         List<SentInvite> sentInvites = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvite.class),date,memberService.getUserNameFromRequest(request), offset, limit);
 
         if(pageNo == 1){
@@ -402,10 +402,10 @@ public class RecruiterService implements RecruiterServices
         int offset = (pageNo - 1) * limit;
         int totalCount = 0;
         if(pageNo == 1){
-            query = "select count(*) from CandidatesInvites where month(date)=? and year(date)=? and fromEmail=?";
+            query = "select count(*) from CandidatesInvites where month(date)=? and year(date)=? and fromEmail=? and deleted = 0";
             totalCount = jdbcTemplate.queryForObject(query, Integer.class, date.toLocalDate().getMonthValue(), date.toLocalDate().getYear(), memberService.getUserNameFromRequest(request) );
         }
-        query = "select candidateInviteId, candidateName as name,designation,location,CandidateEmail as email from CandidatesInvites where month(date)=? and year(date)=? and fromEmail=? limit ?, ?";
+        query = "select candidateInviteId, candidateName as name,designation,location,CandidateEmail as email from CandidatesInvites where month(date)=? and year(date)=? and fromEmail=? and deleted =0 limit ?, ?";
         List<SentInvite> sentInvites = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvite.class), date.toLocalDate().getMonthValue(),date.toLocalDate().getYear(), memberService.getUserNameFromRequest(request), offset, limit);
 
         if(pageNo == 1){
@@ -420,11 +420,11 @@ public class RecruiterService implements RecruiterServices
         int offset = (pageNo - 1) * limit;
         int totalCount = 0;
         if(pageNo == 1){
-            query = "select count(*) from CandidatesInvites where year(date)=? and fromEmail=?";
+            query = "select count(*) from CandidatesInvites where year(date)=? and fromEmail=? and deleted = 0";
             totalCount = jdbcTemplate.queryForObject(query, Integer.class, date.toLocalDate().getYear(), memberService.getUserNameFromRequest(request));
         }
 
-        query = "select candidateInviteId, candidateName as name,designation,location,CandidateEmail as email from CandidatesInvites where year(date)=? and fromEmail=? limit ?, ?";
+        query = "select candidateInviteId, candidateName as name,designation,location,CandidateEmail as email from CandidatesInvites where year(date)=? and fromEmail=? and deleted = 0 limit ?, ?";
         List<SentInvite> sentInvites = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvite.class),date.toLocalDate().getYear(),memberService.getUserNameFromRequest(request), offset, limit);
 
         if(pageNo == 1){
@@ -433,5 +433,4 @@ public class RecruiterService implements RecruiterServices
         return List.of(sentInvites.size(), sentInvites);
 
        }
-
 }

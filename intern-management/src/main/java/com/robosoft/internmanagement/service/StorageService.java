@@ -1,5 +1,6 @@
 package com.robosoft.internmanagement.service;
 
+import org.apache.el.stream.Optional;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
@@ -21,13 +22,17 @@ public class StorageService implements StorageServices
 
     private final Path root = Paths.get("src\\main\\resources\\static\\documents\\");
 
-    public String singleFileUpload(MultipartFile file, String email, HttpServletRequest request) throws Exception {
+    public String singleFileUpload(MultipartFile file, String email, HttpServletRequest request, String position) throws Exception {
         String fileUrl = null;
-        if (file.isEmpty()) {
-            return "http://localhost:8080/intern-management/fetch/default@gmail.com/default.png";
-        }
 
         try {
+            if (file.isEmpty() && position.equalsIgnoreCase("MEMBER")) {
+                return "http://localhost:8080/intern-management/fetch/default@gmail.com/default.png";
+            }
+            else if (file.isEmpty() && position.equalsIgnoreCase("CANDIDATE")) {
+                return "empty";
+            }
+
             File newDirectory = new File(UPLOADED_FOLDER, email);
             if(!(newDirectory.exists())){
                 newDirectory.mkdir();
@@ -41,8 +46,8 @@ public class StorageService implements StorageServices
             fileUrl = generateDocumentUrl(email + "/" + fileName);
             System.out.println(fileUrl);
 
-        } catch (IOException i) {
-            throw new Exception("Errors while uploading file");
+        } catch (Exception i) {
+            return "empty";
         }
 
         return fileUrl;
