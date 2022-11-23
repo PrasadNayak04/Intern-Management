@@ -17,5 +17,7 @@ public class AssignBoard
     private String organizerEmail;
     private Date assignDate;
     private String status;
+    private boolean okWithOtherLocations;
+
 
 }

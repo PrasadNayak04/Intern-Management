@@ -22,6 +22,9 @@ public class AuthorityService implements AuthorityServices
     @Autowired
     JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    CandidateService candidateService;
+
     private String query;
 
     public boolean addTechnology(Technology technology, HttpServletRequest request){
@@ -75,6 +78,12 @@ public class AuthorityService implements AuthorityServices
 
     public String assignRecruiter(AssignBoard assignBoard)
     {
+        query = "select position from CandidatesProfile where candidateId = ? and deleted = 0";
+        String designation = jdbcTemplate.queryForObject(query, String.class, assignBoard.getCandidateId());
+
+        if(!candidateService.isVacantPosition(designation)){
+            return "Cannot assign since position is closed";
+        }
         try
         {
             query = "select name from MembersProfile where emailId=? and position=?";

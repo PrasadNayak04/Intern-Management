@@ -55,7 +55,6 @@ public class MemberLoginController {
 
         final UserDetails userDetails = userDetailsService.loadUserByUsername(member.getEmailId());
         final String jwtToken = tokenManager.generateJwtToken(userDetails);
-        //MemberService.setCurrentUser(userDetails.getUsername());
         return ResponseEntity.ok(jwtToken);
     }
 
