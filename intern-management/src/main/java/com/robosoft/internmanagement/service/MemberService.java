@@ -1,8 +1,10 @@
 package com.robosoft.internmanagement.service;
 
+import com.robosoft.internmanagement.model.AssignBoardPage;
 import com.robosoft.internmanagement.model.LoggedProfile;
 import com.robosoft.internmanagement.model.NotificationDisplay;
 import com.robosoft.internmanagement.model.Notification;
+import com.robosoft.internmanagement.modelAttributes.AssignBoard;
 import com.robosoft.internmanagement.modelAttributes.Event;
 import com.robosoft.internmanagement.modelAttributes.Member;
 import com.robosoft.internmanagement.modelAttributes.MemberProfile;
@@ -246,6 +248,16 @@ public class MemberService implements MemberServices
         String token = request.getHeader("Authorization").substring(7);
         System.out.println(tokenManager);
         return tokenManager.getUsernameFromToken(token);
+    }
+
+    public void addToResults(AssignBoardPage assignBoard, String result){
+        String query = "insert into Results(candidateId, designation, location, result) values(?,?,?,?)";
+        jdbcTemplate.update(query, assignBoard.getCandidateId(), assignBoard.getDesignation(), assignBoard.getLocation(), result);
+    }
+
+    public AssignBoardPage getAssignBoardPageDetails(AssignBoard board){
+        String query = "select designation, location from Applications  where candidateId = ? and deleted = 0";
+        return jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(AssignBoardPage.class), board.getCandidateId());
     }
 
 }

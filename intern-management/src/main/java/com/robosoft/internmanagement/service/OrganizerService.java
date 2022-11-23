@@ -26,12 +26,14 @@ public class OrganizerService implements OrganizerServices
             String query = "select status from Assignboard where candidateId=? and organizerEmail=? and status=? and deleted = 0";
             jdbcTemplate.queryForObject(query,String.class,board.getCandidateId(),board.getOrganizerEmail(),"NEW");
 
-            query = "select designation, locations Applications where candidateId = ? and deleted = 0";
-            AssignBoardPage assignBoard = jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(AssignBoardPage.class), board.getCandidateId());
+            //query = "select designation, location from Applications  where candidateId = ? and deleted = 0";
+            //AssignBoardPage assignBoard = jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(AssignBoardPage.class), board.getCandidateId());
+
+            AssignBoardPage assignBoard = memberService.getAssignBoardPageDetails(board);
 
             if(board.getStatus().equalsIgnoreCase("SHORTLISTED")){
 
-                query = "select vacancy from Technologies where designation = ? and location = ? and deleted = 0";
+                query = "select vacancy from Locations where designation = ? and location = ? and deleted = 0";
                 if(jdbcTemplate.queryForObject(query, Integer.class, assignBoard.getDesignation(), assignBoard.getLocation()) == 0){
 
                     query = "select vacancy from Locations where designation = ? and location = 'ANY' and deleted = 0";
@@ -42,8 +44,11 @@ public class OrganizerService implements OrganizerServices
                         return "Rejected No vacancy available";
                     }
                     else {
+                        assignBoard.setLocation("ANY");
                         query = "update Assignboard set status = ? where candidateId = ? and deleted = 0";
                         jdbcTemplate.update(query, board.getStatus(), board.getCandidateId());
+
+                        memberService.addToResults(assignBoard, "SHORTLISTED");
 
                         query = "update Locations set vacancy = vacancy - 1 where designation = ? and location = 'ANY' and deleted = 0";
                         jdbcTemplate.update(query, assignBoard.getDesignation());
@@ -56,6 +61,8 @@ public class OrganizerService implements OrganizerServices
 
                 query = "update Assignboard set status = ? where candidateId = ? and deleted = 0";
                 jdbcTemplate.update(query, board.getStatus(), board.getCandidateId());
+
+                memberService.addToResults(assignBoard, "SHORTLISTED");
 
                 query = "update Locations set vacancy = vacancy - 1 where designation = ? and location = ? and deleted = 0";
                 jdbcTemplate.update(query, assignBoard.getDesignation(), assignBoard.getLocation());
@@ -71,10 +78,12 @@ public class OrganizerService implements OrganizerServices
             }
             else if(board.getStatus().equalsIgnoreCase("REJECTED")){
                 rejectCandidate(board);
+                memberService.addToResults(assignBoard, "REJECTED");
             }
         }
         catch (Exception e)
         {
+            e.printStackTrace();
             return "Invalid information";
         }
         return "Interview Completed Successfully";
@@ -84,5 +93,7 @@ public class OrganizerService implements OrganizerServices
         String query = "update Assignboard set status='REJECTED' where candidateId=? and organizerEmail=? and status=?";
         jdbcTemplate.update(query,board.getCandidateId(),board.getOrganizerEmail(),"NEW");
     }
+
+
 
 }
