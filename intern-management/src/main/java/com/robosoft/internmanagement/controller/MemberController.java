@@ -3,8 +3,8 @@ package com.robosoft.internmanagement.controller;
 import com.robosoft.internmanagement.model.LoggedProfile;
 import com.robosoft.internmanagement.model.NotificationDisplay;
 import com.robosoft.internmanagement.modelAttributes.Event;
-import com.robosoft.internmanagement.service.MemberService;
-import com.robosoft.internmanagement.service.StorageService;
+import com.robosoft.internmanagement.service.MemberServices;
+import com.robosoft.internmanagement.service.StorageServices;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -26,34 +26,34 @@ import java.nio.file.Paths;
 public class MemberController {
 
     @Autowired
-    private StorageService storageService;
+    private StorageServices storageServices;
 
     @Autowired
-    private MemberService memberService;
+    private MemberServices memberServices;
 
     @GetMapping("/logged-profile")
     public LoggedProfile getProfile(HttpServletRequest request)
     {
-        return memberService.getProfile(request);
+        return memberServices.getProfile(request);
     }
 
     @GetMapping("/notification-display")
     public NotificationDisplay getNotifications(HttpServletRequest request)
     {
-        return memberService.notification(request);
+        return memberServices.notification(request);
     }
 
     @GetMapping("/notifications")
     public ResponseEntity<?> getNotifications(@RequestParam int pageNo, @RequestParam int limit, HttpServletRequest request){
-        if(!memberService.validPageDetails(pageNo, limit)){
+        if(!memberServices.validPageDetails(pageNo, limit)){
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Invalid page details");
         }
-        return ResponseEntity.ok(memberService.getNotifications(pageNo, limit, request));
+        return ResponseEntity.ok(memberServices.getNotifications(pageNo, limit, request));
     }
 
     @PostMapping("/event-creation")
     public ResponseEntity<?> createEvent(@ModelAttribute Event event, HttpServletRequest request){
-        if(memberService.createEvent(event, request)){
+        if(memberServices.createEvent(event, request)){
             return ResponseEntity.status(HttpStatus.CREATED).body("Event created successfully");
         }
         return ResponseEntity.status(HttpStatus.CONFLICT).body("Event creation failed!");
@@ -61,7 +61,7 @@ public class MemberController {
 
     @PatchMapping("/event-status-update")
     public ResponseEntity<?> reactEventInvite(@RequestParam int notificationId, @RequestParam String status, HttpServletRequest request){
-        if(memberService.reactToEventInvite(notificationId, status, request)) {
+        if(memberServices.reactToEventInvite(notificationId, status, request)) {
             return ResponseEntity.ok("Invitation status updated");
         }
         return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Failed to update invitation status");
@@ -79,7 +79,7 @@ public class MemberController {
             return null;
         }
 
-        String contentType = storageService.getContentType(request, resource);
+        String contentType = storageServices.getContentType(request, resource);
 
         return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")

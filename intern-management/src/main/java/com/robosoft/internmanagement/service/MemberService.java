@@ -11,6 +11,7 @@ import com.robosoft.internmanagement.modelAttributes.MemberProfile;
 import com.robosoft.internmanagement.service.jwtSecurity.BeanStore;
 import com.robosoft.internmanagement.service.jwtSecurity.TokenManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -251,13 +252,21 @@ public class MemberService implements MemberServices
     }
 
     public void addToResults(AssignBoardPage assignBoard, String result){
-        String query = "insert into Results(candidateId, designation, location, result) values(?,?,?,?)";
-        jdbcTemplate.update(query, assignBoard.getCandidateId(), assignBoard.getDesignation(), assignBoard.getLocation(), result);
+        try {
+            String query = "insert into Results(candidateId, designation, location, result) values(?,?,?,?)";
+            jdbcTemplate.update(query, assignBoard.getCandidateId(), assignBoard.getDesignation(), assignBoard.getLocation(), result);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public AssignBoardPage getAssignBoardPageDetails(AssignBoard board){
-        String query = "select designation, location from Applications  where candidateId = ? and deleted = 0";
-        return jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(AssignBoardPage.class), board.getCandidateId());
+        try {
+            String query = "select candidateId, designation, location from Applications  where candidateId = ? and deleted = 0";
+            return jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(AssignBoardPage.class), board.getCandidateId());
+        } catch (Exception e) {
+            return null;
+        }
     }
 
 }

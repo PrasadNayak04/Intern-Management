@@ -2,10 +2,10 @@ package com.robosoft.internmanagement.controller;
 
 import com.robosoft.internmanagement.modelAttributes.Member;
 import com.robosoft.internmanagement.modelAttributes.MemberProfile;
-import com.robosoft.internmanagement.service.EmailService;
+import com.robosoft.internmanagement.service.EmailServices;
+import com.robosoft.internmanagement.service.MemberServices;
 import com.robosoft.internmanagement.service.jwtSecurity.JwtUserDetailsService;
 import com.robosoft.internmanagement.service.jwtSecurity.TokenManager;
-import com.robosoft.internmanagement.service.MemberService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,15 +30,15 @@ public class MemberLoginController {
     private TokenManager tokenManager;
 
     @Autowired
-    private MemberService memberService;
+    private MemberServices memberServices;
 
     @Autowired
-    private EmailService emailService;
+    private EmailServices emailServices;
 
 
     @PostMapping("/register")
     public String registerMember(@ModelAttribute MemberProfile memberProfile, HttpServletRequest request){
-        return memberService.registerMember(memberProfile, request);
+        return memberServices.registerMember(memberProfile, request);
     }
 
     @PostMapping("/login")
@@ -60,7 +60,7 @@ public class MemberLoginController {
 
     @PostMapping("/otp")
     public ResponseEntity<?> sendMail(@RequestParam String toEmail){
-        boolean mailSent = emailService.sendEmail(toEmail);
+        boolean mailSent = emailServices.sendEmail(toEmail);
 
         if(mailSent){
             return ResponseEntity.ok().body("Otp has been sent to the email \"" + toEmail + "\"");
@@ -72,12 +72,12 @@ public class MemberLoginController {
     @PutMapping("/otp-verification")
     public String verify(@RequestParam String emailId,@RequestParam String otp)
     {
-        return emailService.verification(emailId,otp);
+        return emailServices.verification(emailId,otp);
     }
 
     @PatchMapping("/password-update")
     public ResponseEntity<?> updatePassword(@ModelAttribute Member member){
-        int updateStatus = memberService.updatePassword(member);
+        int updateStatus = memberServices.updatePassword(member);
         if(updateStatus == 1){
             return ResponseEntity.ok("Password updated successfully");
         }

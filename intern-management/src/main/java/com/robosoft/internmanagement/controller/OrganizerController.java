@@ -1,7 +1,7 @@
 package com.robosoft.internmanagement.controller;
 
 import com.robosoft.internmanagement.modelAttributes.AssignBoard;
-import com.robosoft.internmanagement.service.OrganizerService;
+import com.robosoft.internmanagement.service.OrganizerServices;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -15,12 +15,12 @@ import javax.servlet.http.HttpServletRequest;
 public class OrganizerController
 {
     @Autowired
-    OrganizerService organizerService;
+    OrganizerServices organizerServices;
 
     @PutMapping("/interview")
     public String assignStatus(@ModelAttribute AssignBoard board, HttpServletRequest request)
     {
-        return organizerService.takeInterview(board, request);
+        return organizerServices.takeInterview(board, request);
     }
 
 }

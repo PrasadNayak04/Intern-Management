@@ -1,7 +1,7 @@
 package com.robosoft.internmanagement.controller;
 
 import com.robosoft.internmanagement.modelAttributes.CandidateProfile;
-import com.robosoft.internmanagement.service.CandidateService;
+import com.robosoft.internmanagement.service.CandidateServices;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,12 +15,11 @@ import javax.servlet.http.HttpServletRequest;
 public class CandidateController {
 
     @Autowired
-    private CandidateService candidateService;
+    private CandidateServices candidateServices;
 
     @PostMapping("/register")
     public String candidateRegister(@ModelAttribute CandidateProfile candidateProfile, HttpServletRequest request) throws Exception {
-        System.out.println(candidateProfile);
-        return candidateService.candidateRegister(candidateProfile,request);
+        return candidateServices.candidateRegister(candidateProfile,request);
     }
 
 }

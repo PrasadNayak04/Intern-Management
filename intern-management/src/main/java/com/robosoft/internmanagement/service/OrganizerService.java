@@ -26,9 +26,6 @@ public class OrganizerService implements OrganizerServices
             String query = "select status from Assignboard where candidateId=? and organizerEmail=? and status=? and deleted = 0";
             jdbcTemplate.queryForObject(query,String.class,board.getCandidateId(),board.getOrganizerEmail(),"NEW");
 
-            //query = "select designation, location from Applications  where candidateId = ? and deleted = 0";
-            //AssignBoardPage assignBoard = jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(AssignBoardPage.class), board.getCandidateId());
-
             AssignBoardPage assignBoard = memberService.getAssignBoardPageDetails(board);
 
             if(board.getStatus().equalsIgnoreCase("SHORTLISTED")){
@@ -41,6 +38,7 @@ public class OrganizerService implements OrganizerServices
                     if(anyVacancy == 0) {
                         board.setStatus("REJECTED");
                         rejectCandidate(board);
+                        memberService.addToResults(assignBoard, "REJECTED");
                         return "Rejected No vacancy available";
                     }
                     else {
@@ -48,6 +46,7 @@ public class OrganizerService implements OrganizerServices
                         query = "update Assignboard set status = ? where candidateId = ? and deleted = 0";
                         jdbcTemplate.update(query, board.getStatus(), board.getCandidateId());
 
+                        System.out.println(assignBoard.getCandidateId());
                         memberService.addToResults(assignBoard, "SHORTLISTED");
 
                         query = "update Locations set vacancy = vacancy - 1 where designation = ? and location = 'ANY' and deleted = 0";
@@ -83,7 +82,6 @@ public class OrganizerService implements OrganizerServices
         }
         catch (Exception e)
         {
-            e.printStackTrace();
             return "Invalid information";
         }
         return "Interview Completed Successfully";
@@ -93,7 +91,5 @@ public class OrganizerService implements OrganizerServices
         String query = "update Assignboard set status='REJECTED' where candidateId=? and organizerEmail=? and status=?";
         jdbcTemplate.update(query,board.getCandidateId(),board.getOrganizerEmail(),"NEW");
     }
-
-
-
+    
 }
