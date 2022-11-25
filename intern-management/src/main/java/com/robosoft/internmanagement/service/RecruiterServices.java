@@ -68,6 +68,5 @@ public interface RecruiterServices
 
     List<?> getByYear(Date date, int pageNo, int limit, HttpServletRequest request);
 
-    List<SentInvite> searchInvites(int value,Date date,String name, HttpServletRequest request);
-
+    List<SentInvite> searchInvites(int value, Date date, String name, HttpServletRequest request);
 }

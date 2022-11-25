@@ -250,4 +250,5 @@ public class RecruiterController
         return ResponseEntity.ok(list);
     }
 
+
 }
