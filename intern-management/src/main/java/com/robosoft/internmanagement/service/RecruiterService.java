@@ -515,5 +515,27 @@ public class RecruiterService implements RecruiterServices
         }
         return Arrays.asList(sentInvites.size(), sentInvites);
 
-       }
+    }
+
+    public List<SentInvite> searchInvites(int value,Date date,String name, HttpServletRequest request) {
+        String query1 = "select candidateInviteId, candidateName as name,designation,location,CandidateEmail as email from candidatesinvites where ";
+        if(value==1) {
+            String check1 = "date = ? and fromEmail=? and candidatename = ? and deleted = 0";
+            query = query1 + check1;
+            List<SentInvite> sentInvites = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvite.class),date.toLocalDate(),memberService.getUserNameFromRequest(request), name);
+            return sentInvites;
+        } else if (value==2) {
+            String check2= "month(date)=? and year(date)=? and fromEmail=? and candidatename = ? and deleted = 0";
+            query = query1 + check2;
+            List<SentInvite> sentInvites = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvite.class),date.toLocalDate().getMonthValue(),date.toLocalDate().getYear(),memberService.getUserNameFromRequest(request), name);
+            return sentInvites;
+        } else if (value==3) {
+            String check3= "year(date)=? and fromEmail=? and candidatename = ? and deleted = 0";
+            query = query1 + check3;
+            List<SentInvite> sentInvites = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(SentInvite.class),date.toLocalDate().getYear(),memberService.getUserNameFromRequest(request), name);
+            return sentInvites;
+        }
+        return null;
+    }
+
 }

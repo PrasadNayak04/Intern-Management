@@ -239,4 +239,15 @@ public class RecruiterController
         return "Failed";
     }
 
+    @GetMapping("/invitation-search")
+    public ResponseEntity<List<SentInvite>> searchInvites(@RequestParam int value,@RequestParam Date date, @RequestParam String name, HttpServletRequest request)
+    {
+        List<SentInvite> list = recruiterServices.searchInvites(value, date, name, request);
+        if (list==null)
+        {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+        return ResponseEntity.ok(list);
+    }
+
 }
