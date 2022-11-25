@@ -19,8 +19,9 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 
 @RestController
-@RequestMapping("/intern-management/member-login")
-public class MemberLoginController {
+@CrossOrigin
+@RequestMapping(value = "/member-credentials")
+public class MemberCredentialsController {
 
     @Autowired
     private JwtUserDetailsService userDetailsService;
@@ -41,16 +42,15 @@ public class MemberLoginController {
         return memberServices.registerMember(memberProfile, request);
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> createToken(@ModelAttribute Member member, HttpServletRequest request) throws Exception {
+    @PostMapping(value = "/login")
+    public ResponseEntity<?> createToken(@RequestBody Member member, HttpServletRequest request) throws Exception {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(member.getEmailId(), member.getPassword()));
         } catch (DisabledException e) {
             e.printStackTrace();
             throw new Exception("USER_DISABLED", e);
         } catch (BadCredentialsException e) {
-            e.printStackTrace();
-            throw new Exception("INVALID_CREDENTIALS", e);
+            return ResponseEntity.badRequest().body(false);
         }
 
         final UserDetails userDetails = userDetailsService.loadUserByUsername(member.getEmailId());

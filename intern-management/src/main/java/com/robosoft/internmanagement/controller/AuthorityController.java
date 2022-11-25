@@ -12,8 +12,9 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
+@CrossOrigin
 @RestController
-@RequestMapping("/intern-management/authority")
+@RequestMapping(value = "/authority", produces = "application/json")
 public class AuthorityController
 {
     @Autowired
@@ -39,5 +40,6 @@ public class AuthorityController
     {
         return authorityServices.assignRecruiter(assignBoard);
     }
+
 }
 

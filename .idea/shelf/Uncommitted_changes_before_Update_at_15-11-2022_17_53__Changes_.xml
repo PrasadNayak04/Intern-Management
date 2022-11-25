@@ -1,9 +1,0 @@
-<changelist name="Uncommitted_changes_before_Update_at_15-11-2022_17_53_[Changes]" date="1668515032958" recycled="true" deleted="true">
-  <option name="PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_15-11-2022_17_53_[Changes]/shelved.patch" />
-  <option name="DESCRIPTION" value="Uncommitted changes before Update at 15-11-2022 17:53 [Changes]" />
-  <binary>
-    <option name="BEFORE_PATH" value="intern-management/target/classes/com/robosoft/internmanagement/service/EmailService.class" />
-    <option name="AFTER_PATH" value="intern-management/target/classes/com/robosoft/internmanagement/service/EmailService.class" />
-    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_15-11-2022_17_53_[Changes]/EmailService.class" />
-  </binary>
-</changelist>
