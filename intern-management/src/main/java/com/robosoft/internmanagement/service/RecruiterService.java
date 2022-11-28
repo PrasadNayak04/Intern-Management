@@ -6,7 +6,6 @@ import com.robosoft.internmanagement.exception.ResponseData;
 import com.robosoft.internmanagement.model.*;
 import com.robosoft.internmanagement.modelAttributes.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -15,7 +14,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -384,13 +382,13 @@ public class RecruiterService implements RecruiterServices {
         return status >= 1;
     }
 
-    public PageData<?> getAssignBoardPage(int pageNo, int limit, HttpServletRequest request) {
+    public PageData<?>  getAssignBoardPage(int pageNo, int limit, HttpServletRequest request) {
         String currentUser = memberService.getUserNameFromRequest(request);
         int offset = (pageNo - 1) * limit;
         int totalCount = 0;
         try {
             if (pageNo == 1) {
-                query = "select count(distinct applications.candidateId) from membersprofile inner join assignboard on membersprofile.emailId=organizerEmail inner join applications on AssignBoard.candidateId=applications.candidateId inner join candidatesprofile on candidatesprofile.candidateId=applications.candidateId where recruiterEmail=? and status = 'NEW' and membersprofile.deleted = 0 and candidatesprofile.deleted = 0 and Assignboard.deleted = 0 and applications.deleted = 0";
+                query = "select count(distinct applications.candidateId) from                      inner join assignboard on membersprofile.emailId=organizerEmail inner join applications on AssignBoard.candidateId=applications.candidateId inner join candidatesprofile on candidatesprofile.candidateId=applications.candidateId where recruiterEmail=? and status = 'NEW' and membersprofile.deleted = 0 and candidatesprofile.deleted = 0 and Assignboard.deleted = 0 and applications.deleted = 0";
                 totalCount = jdbcTemplate.queryForObject(query, Integer.class, currentUser);
             }
             query = "select candidatesprofile.candidateId,candidatesprofile.name,applications.designation,applications.location,AssignBoard.assignDate,membersprofile.name as organizer  from membersprofile inner join Assignboard on membersprofile.emailId=organizerEmail inner join applications on AssignBoard.candidateId=applications.candidateId inner join candidatesprofile on candidatesprofile.candidateId=applications.candidateId where recruiterEmail=? and status = 'NEW' and membersprofile.deleted = 0 and candidatesprofile.deleted = 0 and Assignboard.deleted = 0 and applications.deleted = 0 group by applications.candidateId limit ?, ?";

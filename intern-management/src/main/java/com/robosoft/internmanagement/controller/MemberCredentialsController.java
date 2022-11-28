@@ -9,7 +9,6 @@ import com.robosoft.internmanagement.service.EmailServices;
 import com.robosoft.internmanagement.service.MemberServices;
 import com.robosoft.internmanagement.service.jwtSecurity.JwtUserDetailsService;
 import com.robosoft.internmanagement.service.jwtSecurity.TokenManager;
-import io.jsonwebtoken.MalformedJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.awt.datatransfer.MimeTypeParseException;
 
 @RestController
 @CrossOrigin

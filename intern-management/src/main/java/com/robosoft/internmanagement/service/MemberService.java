@@ -11,14 +11,12 @@ import com.robosoft.internmanagement.modelAttributes.MemberProfile;
 import com.robosoft.internmanagement.service.jwtSecurity.BeanStore;
 import com.robosoft.internmanagement.service.jwtSecurity.TokenManager;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -247,10 +245,6 @@ public class MemberService implements MemberServices
         } catch (Exception e) {
             return null;
         }
-        /*if(pageNo ==1) {
-            return Arrays.asList(totalCount, notifications.size(), notifications);
-        }
-        return Arrays.asList(notifications.size(), notifications);*/
     }
 
     public String encodePassword(String password){

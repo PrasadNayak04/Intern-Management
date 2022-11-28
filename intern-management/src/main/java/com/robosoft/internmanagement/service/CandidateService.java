@@ -6,7 +6,6 @@ import com.robosoft.internmanagement.exception.ResponseData;
 import com.robosoft.internmanagement.modelAttributes.*;
 import com.robosoft.internmanagement.service.jwtSecurity.TokenManager;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 

@@ -1,7 +1,6 @@
 package com.robosoft.internmanagement.exception;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
