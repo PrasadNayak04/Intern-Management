@@ -8,6 +8,8 @@ public interface EmailServices
 {
     boolean sendEmail(String toEmail);
 
+    boolean sendRegistrationOtp(String toEmail);
+
     boolean insert(String emailId,String code);
 
     String verification(String emailId,String otp);

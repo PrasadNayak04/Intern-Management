@@ -41,6 +41,16 @@ public class MemberCredentialsController {
     private EmailServices emailServices;
 
 
+    @PostMapping(value = "/email-verification")
+    public ResponseEntity<?> verifyMail(@RequestParam String toEmail){
+        boolean mailSent = emailServices.sendRegistrationOtp(toEmail);
+        if(mailSent){
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(memberServices.getMemberNameByEmail(toEmail) + " "  + toEmail, AppConstants.SUCCESS));
+        }else{
+            return ResponseEntity.ok("false");
+        }
+    }
+
     @PostMapping("/register")
     public ResponseEntity<?> registerMember(@Valid @ModelAttribute MemberProfile memberProfile, HttpServletRequest request){
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(memberServices.registerMember(memberProfile, request));

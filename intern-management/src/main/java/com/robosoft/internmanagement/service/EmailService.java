@@ -36,14 +36,7 @@ public class EmailService implements EmailServices
 
         String subject = "OTP from Intern Management";
 
-        Random random = new Random();
-        int otp;
-
-        do
-        {
-            otp = random.nextInt(9999);
-        }
-        while(String.valueOf(otp).length() < 4);
+        int otp = generateOTP();
 
         String message = "Please use OTP " + otp + " for your account password reset request";
 
@@ -78,6 +71,54 @@ public class EmailService implements EmailServices
             return false;
         }
 
+    }
+
+    public boolean sendRegistrationOtp(String toEmail)
+    {
+        String subject = "OTP from Intern Management";
+
+        int otp = generateOTP();
+
+        String message = "Please use OTP " + otp + " for your account registration";
+
+        try {
+            jdbcTemplate.queryForObject("select emailId from members where emailId=?", String.class, toEmail);
+            return false;
+        }catch (Exception e)
+        {
+            SimpleMailMessage mailMessage = new SimpleMailMessage();
+
+            mailMessage.setFrom(sender);
+            mailMessage.setTo(toEmail);
+            mailMessage.setSubject(subject);
+            mailMessage.setText(message);
+            String OTP=String.valueOf(otp);
+            try
+            {
+                jdbcTemplate.queryForObject("select emailId from forgotpasswords where emailId=?", String.class,toEmail);
+                jdbcTemplate.update("update forgotpasswords set otp=?,time=current_timestamp where emailId=?",OTP,toEmail);
+                javaMailSender.send(mailMessage);
+                return true;
+            }
+            catch (Exception e1)
+            {
+                javaMailSender.send(mailMessage);
+                insert(toEmail,OTP);
+                return true;
+            }
+        }
+
+    }
+
+    public int generateOTP(){
+        Random random = new Random();
+        int otp;
+        do
+        {
+            otp = random.nextInt(9999);
+        }
+        while(String.valueOf(otp).length() < 4);
+        return otp;
     }
 
     public boolean insert(String emailId,String code)
