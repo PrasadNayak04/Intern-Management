@@ -43,12 +43,13 @@ public class EmailService implements EmailServices
         {
             otp = random.nextInt(9999);
         }
-        while(String.valueOf(otp).length() < 3);
+        while(String.valueOf(otp).length() < 4);
 
         String message = "Please use OTP " + otp + " for your account password reset request";
 
         try
         {
+            jdbcTemplate.queryForObject("select emailId from members where emailId=?", String.class,toEmail);
 
             SimpleMailMessage mailMessage = new SimpleMailMessage();
 
@@ -61,19 +62,19 @@ public class EmailService implements EmailServices
             String OTP=String.valueOf(otp);
             try
             {
-                jdbcTemplate.queryForObject("select emailId from member where emailId=?", String.class,toEmail);
+                jdbcTemplate.queryForObject("select emailId from forgotpasswords where emailId=?", String.class,toEmail);
                 jdbcTemplate.update("update forgotpasswords set otp=?,time=current_timestamp where emailId=?",OTP,toEmail);
-                return flag = true;
+                return true;
             }
             catch (Exception e)
             {
-                return flag = insert(toEmail,OTP);
+                insert(toEmail,OTP);
+                return true;
             }
 
         }
         catch (Exception e)
         {
-            e.printStackTrace();
             return false;
         }
 
@@ -97,12 +98,12 @@ public class EmailService implements EmailServices
             String verifyOtp = jdbcTemplate.queryForObject("select otp from forgotpasswords where emailId=?", String.class, emailId);
 
             if (otp.equals(verifyOtp) && expireTime < 120) {
-                return "Done";
+                return "VERIFIED";
             }
-            return "Invalid OTP/Time Expired";
+            return "INVALID OTP/TIME_EXPIRED";
         }catch (Exception e)
         {
-            return "Time Expired";
+            return "TIME_EXPIRED";
         }
     }
 
@@ -129,9 +130,9 @@ public class EmailService implements EmailServices
         }
         catch (Exception e)
         {
-            e.printStackTrace();
             return false;
         }
+
     }
 
     public boolean resendInvite(int inviteId, HttpServletRequest request)
@@ -140,10 +141,11 @@ public class EmailService implements EmailServices
         String subject = "Invite from Robosoft Technologies";
         String message = "Inviting to join us as a intern.";
 
-        String query = "select * from candidatesinvites where candidateInviteId=?";
-        CandidateInvite invites = jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(CandidateInvite.class), inviteId);
         try
         {
+            String query = "select * from candidatesinvites where candidateInviteId=?";
+            CandidateInvite invites = jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(CandidateInvite.class), inviteId);
+
             String check = "select designation from candidatesinvites where candidateInviteId=? and fromEmail=?";
             jdbcTemplate.queryForObject(check, String.class,inviteId, currentUser);
 

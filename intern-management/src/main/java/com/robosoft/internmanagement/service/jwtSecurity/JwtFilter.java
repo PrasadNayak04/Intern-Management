@@ -1,7 +1,9 @@
 package com.robosoft.internmanagement.service.jwtSecurity;
 
+import com.robosoft.internmanagement.exception.JwtTokenException;
 import com.robosoft.internmanagement.service.MemberService;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -40,6 +42,8 @@ public class JwtFilter extends OncePerRequestFilter {
                     System.out.println("Unable to get JWT Token");
                 } catch (ExpiredJwtException e) {
                     System.out.println("JWT Token has expired");
+                } catch (MalformedJwtException malformedJwtException){
+                    throw new JwtTokenException("TOKEN NOT VALID");
                 }
             } else {
             System.out.println("Bearer String not found in token");

@@ -24,7 +24,7 @@ public class StorageService implements StorageServices
 
         try {
             if (file.isEmpty() && position.equalsIgnoreCase("MEMBER")) {
-                return "http://localhost:8080/intern-management/fetch/default@gmail.com/default.png";
+                return "http://localhost:8080/intern-management/member/fetch/default@gmail.com/default.png";
             }
             else if (file.isEmpty() && position.equalsIgnoreCase("CANDIDATE")) {
                 return "empty";

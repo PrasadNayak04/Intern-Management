@@ -1,9 +1,9 @@
 package com.robosoft.internmanagement.service;
 
-import com.robosoft.internmanagement.model.AssignBoardPage;
-import com.robosoft.internmanagement.model.LoggedProfile;
-import com.robosoft.internmanagement.model.NotificationDisplay;
-import com.robosoft.internmanagement.model.Notification;
+import com.robosoft.internmanagement.constants.AppConstants;
+import com.robosoft.internmanagement.exception.DatabaseException;
+import com.robosoft.internmanagement.exception.ResponseData;
+import com.robosoft.internmanagement.model.*;
 import com.robosoft.internmanagement.modelAttributes.AssignBoard;
 import com.robosoft.internmanagement.modelAttributes.Event;
 import com.robosoft.internmanagement.modelAttributes.Member;
@@ -11,6 +11,7 @@ import com.robosoft.internmanagement.modelAttributes.MemberProfile;
 import com.robosoft.internmanagement.service.jwtSecurity.BeanStore;
 import com.robosoft.internmanagement.service.jwtSecurity.TokenManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -52,13 +53,14 @@ public class MemberService implements MemberServices
         }
     }
 
-    public String registerMember(MemberProfile memberProfile, HttpServletRequest request){
+    public ResponseData registerMember(MemberProfile memberProfile, HttpServletRequest request){
+
 
         query = "select count(emailId) from membersprofile where emailId = ? and deleted = 0";
         int count = jdbcTemplate.queryForObject(query, Integer.class, memberProfile.getEmailId());
 
         if(count > 0){
-            return "Already registered";
+            return new ResponseData("FAILED", AppConstants.RECORD_ALREADY_EXIST);
         }
 
         memberProfile.setPassword(encodePassword(memberProfile.getPassword()));
@@ -69,15 +71,18 @@ public class MemberService implements MemberServices
 
             String photoDownloadUrl = storageService.singleFileUpload(memberProfile.getPhoto(), memberProfile.getEmailId(), request, "MEMBER");
 
+            if (photoDownloadUrl.equals("empty"))
+                photoDownloadUrl = "http://localhost:8080/intern-management/fetch/default@gmail.com/default.png";
+
             query = "insert into membersprofile(name, emailId, photoUrl, mobileNumber, designation, position) values (?,?,?,?,?,?)";
             jdbcTemplate.update(query, memberProfile.getName(), memberProfile.getEmailId(), photoDownloadUrl, memberProfile.getMobileNumber(), memberProfile.getDesignation(), memberProfile.getPosition());
 
-            return "User credentials saved";
+            return new ResponseData("SUCCESS", AppConstants.SUCCESS);
 
         } catch(Exception e){
             query = "delete from members where emailId = ? and deleted = 0";
             jdbcTemplate.update(query, memberProfile.getEmailId());
-            return "Unable to save user credentials";
+            throw new DatabaseException(AppConstants.REQUIREMENTS_FAILED);
         }
 
     }
@@ -116,29 +121,36 @@ public class MemberService implements MemberServices
 
     public LoggedProfile getProfile(HttpServletRequest request)
     {
-
-        query = "select name,designation,photoUrl as profileImage from membersprofile where emailId=?";
-        return jdbcTemplate.queryForObject(query,new BeanPropertyRowMapper<>(LoggedProfile.class), getUserNameFromRequest(request));
+        try {
+            query = "select name,designation,photoUrl as profileImage from membersprofile where emailId=?";
+            return jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(LoggedProfile.class), getUserNameFromRequest(request));
+        }catch (Exception e){
+            return null;
+        }
     }
 
     public NotificationDisplay notification(HttpServletRequest request) {
 
         String notification = "select notificationId, message, date from notifications where notificationId = ? and deleted = 0";
+        try {
+            Notification notifications = jdbcTemplate.queryForObject("select notificationId, type from notifications where emailId=? and deleted = 0 order by notificationId desc limit 1", new BeanPropertyRowMapper<>(Notification.class), getUserNameFromRequest(request));
+            int eventId = jdbcTemplate.queryForObject("select eventId from notifications where notificationId = ? and deleted = 0", Integer.class, notifications.getNotificationId());
 
-        Notification notifications = jdbcTemplate.queryForObject("select notificationId, type from notifications where emailId=? and deleted = 0 order by notificationId desc limit 1", new BeanPropertyRowMapper<>(Notification.class), getUserNameFromRequest(request));
-        int eventId = jdbcTemplate.queryForObject("select eventId from notifications where notificationId = ? and deleted = 0", Integer.class, notifications.getNotificationId());
-        if (notifications.getType().equalsIgnoreCase("INVITE")) {
-            String profileImage = "select photoUrl from notifications inner join eventsinvites using(eventId) inner join membersprofile on eventsinvites.invitedEmail = membersprofile.emailId where notifications.eventId=? and type = 'INVITE' and membersprofile.deleted = 0 and notifications.deleted = 0 and eventsinvites.deleted = 0 group by invitedEmail";
-            List<String> images = jdbcTemplate.queryForList(profileImage, String.class, eventId);
-            NotificationDisplay display = jdbcTemplate.queryForObject(notification, new BeanPropertyRowMapper<>(NotificationDisplay.class), notifications.getNotificationId());
-            for (String image : images){
-                System.out.println(image);
+            if (notifications.getType().equalsIgnoreCase("INVITE")) {
+                String profileImage = "select photoUrl from notifications inner join eventsinvites using(eventId) inner join membersprofile on eventsinvites.invitedEmail = membersprofile.emailId where notifications.eventId=? and type = 'INVITE' and membersprofile.deleted = 0 and notifications.deleted = 0 and eventsinvites.deleted = 0 group by invitedEmail";
+                List<String> images = jdbcTemplate.queryForList(profileImage, String.class, eventId);
+                NotificationDisplay display = jdbcTemplate.queryForObject(notification, new BeanPropertyRowMapper<>(NotificationDisplay.class), notifications.getNotificationId());
+                for (String image : images) {
+                    System.out.println(image);
+                }
+                display.setImages(images);
+                return display;
+            } else {
+                NotificationDisplay display = jdbcTemplate.queryForObject(notification, new BeanPropertyRowMapper<>(NotificationDisplay.class), notifications.getNotificationId());
+                return display;
             }
-            display.setImages(images);
-            return display;
-        } else {
-            NotificationDisplay display = jdbcTemplate.queryForObject(notification, new BeanPropertyRowMapper<>(NotificationDisplay.class), notifications.getNotificationId());
-            return display;
+        } catch (Exception e) {
+            return null;
         }
     }
 
@@ -154,9 +166,13 @@ public class MemberService implements MemberServices
             query = "select max(eventId) from events where creatorEmail = ? and deleted = 0";
             eventId = jdbcTemplate.queryForObject(query, Integer.class, currentUser);
 
+            query = "insert into eventsinvites (eventId, invitedEmail, status) values (?,?,?)";
+            jdbcTemplate.update(query, eventId, getUserNameFromRequest(request), "JOIN");
+
             query = "insert into eventsinvites (eventId, invitedEmail) values (?,?)";
             for(String invitedEmail : event.getInvitedEmails()){
-                jdbcTemplate.update(query, eventId, invitedEmail);
+                if(!invitedEmail.equals(getUserNameFromRequest(request)))
+                    jdbcTemplate.update(query, eventId, invitedEmail);
             }
 
             query = "insert into notifications(emailId, message, type, eventId) values (?,?,?,?)";
@@ -166,7 +182,8 @@ public class MemberService implements MemberServices
             query = "insert into notifications(emailId, message, type, eventId) values (?,?,?,?)";
             message = getMemberNameByEmail(currentUser) + " invited you to Join a Event " + event.getTitle() + " in " + event.getVenue() + " on " + event.getDate().toLocalDate().getYear() + ", " + event.getDate().toLocalDate().getMonth() + " " + event.getDate().toLocalDate().getDayOfMonth() + ". Would you like to join this event?";
             for(String invitedEmail : event.getInvitedEmails()){
-                jdbcTemplate.update(query, invitedEmail, message, "INVITE", eventId);
+                if(!invitedEmail.equals(getUserNameFromRequest(request)))
+                    jdbcTemplate.update(query, invitedEmail, message, "INVITE", eventId);
             }
 
             return true;
@@ -193,7 +210,7 @@ public class MemberService implements MemberServices
             query = "update eventsinvites set status = ? where eventId = ? and invitedEmail = ?";
             int inviteExist = jdbcTemplate.update(query, status, eventId, getUserNameFromRequest(request));
             if(inviteExist == 0){
-                throw new Exception("Event invite not exists");
+                throw new DatabaseException(AppConstants.RECORD_NOT_EXIST);
             }
             //Update event creators notification
             query = "select creatorEmail from events where eventId = ?";
@@ -201,30 +218,39 @@ public class MemberService implements MemberServices
 
             query = "select title from events where eventId = ?";
             String eventTitle = jdbcTemplate.queryForObject(query, String.class, eventId);
+
             String message =  getMemberNameByEmail(getUserNameFromRequest(request)) + " accepted your event " + eventTitle;
+
             query = "insert into notifications(emailId, message, type) values (?,?,?)";
             jdbcTemplate.update(query, eventCreator, message, "OTHERS");
 
             return true;
+
         } catch (Exception e) {
             return false;
         }
 
     }
 
-    public List<?> getNotifications(int pageNo, int limit, HttpServletRequest request){
+    public PageData<?> getNotifications(int pageNo, int limit, HttpServletRequest request){
         int offset = (pageNo - 1) * limit;
         int totalCount = 0;
-        if(pageNo == 1){
-            query = "select count(*) from notifications where emailId = ? and deleted =0";
-            totalCount = jdbcTemplate.queryForObject(query, Integer.class, getUserNameFromRequest(request));
+        try {
+            if (pageNo == 1) {
+                query = "select count(*) from notifications where emailId = ? and deleted =0";
+                totalCount = jdbcTemplate.queryForObject(query, Integer.class, getUserNameFromRequest(request));
+            }
+            query = "select notificationId, message, date, type from notifications where emailId = ? and deleted =0 order by notificationId desc limit ?, ?";
+            List<Notification> notifications = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(Notification.class), getUserNameFromRequest(request), offset, limit);
+
+            return new PageData<>(totalCount, notifications.size(), notifications);
+        } catch (Exception e) {
+            return null;
         }
-        query = "select notificationId, message, date, type from notifications where emailId = ? and deleted =0 order by notificationId desc limit ?, ?";
-        List<Notification> notifications = jdbcTemplate.query(query, new BeanPropertyRowMapper<>(Notification.class), getUserNameFromRequest(request), offset, limit);
-        if(pageNo ==1) {
+        /*if(pageNo ==1) {
             return Arrays.asList(totalCount, notifications.size(), notifications);
         }
-        return Arrays.asList(notifications.size(), notifications);
+        return Arrays.asList(notifications.size(), notifications);*/
     }
 
     public String encodePassword(String password){
@@ -266,12 +292,8 @@ public class MemberService implements MemberServices
     }
 
     public AssignBoardPage getAssignBoardPageDetails(AssignBoard board){
-        try {
-            String query = "select candidateId, designation, location from applications  where candidateId = ? and deleted = 0";
-            return jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(AssignBoardPage.class), board.getCandidateId());
-        } catch (Exception e) {
-            return null;
-        }
+        String query = "select candidateId, designation, location from applications  where candidateId = ? and deleted = 0";
+        return jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(AssignBoardPage.class), board.getCandidateId());
     }
 
 }

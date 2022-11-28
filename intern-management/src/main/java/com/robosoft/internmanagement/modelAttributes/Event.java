@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
 import java.sql.Date;
 import java.util.List;
 
@@ -12,8 +14,11 @@ import java.util.List;
 @AllArgsConstructor
 public class Event {
 
+    @NotBlank
     private String title;
+    @NotBlank
     private String venue;
+    @NotBlank
     private String location;
     private Date date;
     private int time;
