@@ -27,7 +27,7 @@ public interface MemberServices
 
     void rollbackEvent(int eventId);
 
-    boolean deleteExistingCandidate(int candidateId, HttpServletRequest request);
+    boolean deleteExistingCandidate(int candidateId);
 
     boolean reactToEventInvite(int notificationId, String status, HttpServletRequest request);
 

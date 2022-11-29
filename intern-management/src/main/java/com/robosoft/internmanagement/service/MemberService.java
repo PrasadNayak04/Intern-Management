@@ -294,7 +294,7 @@ public class MemberService implements MemberServices
             int status =  jdbcTemplate.queryForObject(query, Integer.class, emailId);
             System.out.println(status + "status");
             if(status > 0)
-                deleteExistingCandidate(candidateId, request);
+                deleteExistingCandidate(candidateId);
             return status > 0;
         }catch (Exception e){
             e.printStackTrace();
@@ -302,7 +302,7 @@ public class MemberService implements MemberServices
         }
     }
 
-    public boolean deleteExistingCandidate(int candidateId, HttpServletRequest request) {
+    public boolean deleteExistingCandidate(int candidateId) {
         query = "select count(*) from candidatesprofile where candidateId = ? and deleted = 1";
         if (jdbcTemplate.queryForObject(query, Integer.class, candidateId) > 0)
             return false;

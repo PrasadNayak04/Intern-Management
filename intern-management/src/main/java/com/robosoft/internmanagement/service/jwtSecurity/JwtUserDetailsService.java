@@ -1,7 +1,5 @@
 package com.robosoft.internmanagement.service.jwtSecurity;
 
-
-import com.robosoft.internmanagement.exception.DatabaseException;
 import com.robosoft.internmanagement.modelAttributes.Member;
 import com.robosoft.internmanagement.service.MemberService;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -9,4 +9,6 @@ public interface OrganizerServices
 {
     ResponseData<?> takeInterview(AssignBoard board, HttpServletRequest request);
 
+    int getAnyLocationVacancy(String designation);
+
 }

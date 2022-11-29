@@ -16,5 +16,7 @@ public interface CandidateServices
     boolean isVacantPosition(String position);
     boolean isVacantPositionLocation(String position, String location);
 
+    boolean alreadyShortlisted(String emailId);
+
 
 }
