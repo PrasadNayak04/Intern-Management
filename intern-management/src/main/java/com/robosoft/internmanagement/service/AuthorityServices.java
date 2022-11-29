@@ -16,5 +16,5 @@ public interface AuthorityServices
 
     List<Application> getApplicants();
 
-    ResponseData<String> assignRecruiter(AssignBoard assignBoard);
+    ResponseData<String> assignRecruiter(AssignBoard assignBoard, HttpServletRequest request);
 }

@@ -39,10 +39,8 @@ public class MemberService implements MemberServices
 
     public Member getMemberByEmail(String memberEmail){
         try {
-            System.out.println("inside member email" + memberEmail);
             query = "select password, role from members where emailId = ?";
             Member member = jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(Member.class), memberEmail);
-            System.out.println(member.getRole());
             return new Member(memberEmail, member.getPassword(), member.getRole());
 
         } catch (Exception e){
@@ -112,7 +110,6 @@ public class MemberService implements MemberServices
             }
             return 1;
         }catch (Exception e){
-            e.printStackTrace();
             return 0;
         }
     }
@@ -138,9 +135,6 @@ public class MemberService implements MemberServices
                 String profileImage = "select photoUrl from notifications inner join eventsinvites using(eventId) inner join membersprofile on eventsinvites.invitedEmail = membersprofile.emailId where notifications.eventId=? and type = 'INVITE' and membersprofile.deleted = 0 and notifications.deleted = 0 and eventsinvites.deleted = 0 group by invitedEmail";
                 List<String> images = jdbcTemplate.queryForList(profileImage, String.class, eventId);
                 NotificationDisplay display = jdbcTemplate.queryForObject(notification, new BeanPropertyRowMapper<>(NotificationDisplay.class), notifications.getNotificationId());
-                for (String image : images) {
-                    System.out.println(image);
-                }
                 display.setImages(images);
                 return display;
             } else {
@@ -256,7 +250,6 @@ public class MemberService implements MemberServices
         try{
             return jdbcTemplate.queryForObject(query, String.class, email);
         }catch (Exception e){
-            System.out.println("catch");
             return null;
         }
     }
@@ -272,7 +265,6 @@ public class MemberService implements MemberServices
 
     public String getUserNameFromRequest(HttpServletRequest request){
         String token = request.getHeader("Authorization").substring(7);
-        System.out.println(tokenManager);
         return tokenManager.getUsernameFromToken(token);
     }
 
@@ -281,13 +273,48 @@ public class MemberService implements MemberServices
             String query = "insert into results(candidateId, designation, location, result) values(?,?,?,?)";
             jdbcTemplate.update(query, assignBoard.getCandidateId(), assignBoard.getDesignation(), assignBoard.getLocation(), result);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new DatabaseException(AppConstants.TASK_FAILED);
         }
     }
 
     public AssignBoardPage getAssignBoardPageDetails(AssignBoard board){
-        String query = "select candidateId, designation, location from applications  where candidateId = ? and deleted = 0";
-        return jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(AssignBoardPage.class), board.getCandidateId());
+        try {
+            String query = "select candidateId, designation, location from applications  where candidateId = ? and deleted = 0";
+            return jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(AssignBoardPage.class), board.getCandidateId());
+        } catch (Exception e) {
+        return null;
+        }
+    }
+
+    public boolean alreadyShortlisted(int candidateId, HttpServletRequest request){
+        try{
+            String query = "select emailId from candidatesprofile where candidateId = ? and deleted = 0";
+            String emailId = jdbcTemplate.queryForObject(query, String.class, candidateId);
+            query ="select count(candidateId) from assignboard inner join candidatesprofile using(candidateId) where emailId = ? and status = 'SHORTLISTED' and assignboard.deleted = 0 and candidatesprofile.deleted = 0";
+            int status =  jdbcTemplate.queryForObject(query, Integer.class, emailId);
+            System.out.println(status + "status");
+            if(status > 0)
+                deleteExistingCandidate(candidateId, request);
+            return status > 0;
+        }catch (Exception e){
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean deleteExistingCandidate(int candidateId, HttpServletRequest request) {
+        query = "select count(*) from candidatesprofile where candidateId = ? and deleted = 1";
+        if (jdbcTemplate.queryForObject(query, Integer.class, candidateId) > 0)
+            return false;
+        String query = "update candidatesprofile, documents, educations, workhistories, links, applications set candidatesprofile.deleted=1, educations.deleted=1, workhistories.deleted=1, documents.deleted=1, links.deleted=1, applications.deleted=1 where candidatesprofile.candidateId=? and documents.candidateId=? and educations.candidateId=? and workhistories.candidateId=? and links.candidateId=? and applications.candidateId=?";
+        int status = jdbcTemplate.update(query, candidateId, candidateId, candidateId, candidateId, candidateId, candidateId);
+
+        query = "update assignboard set deleted = 0 where candidateId = ?";
+        jdbcTemplate.update(query, candidateId);
+
+        query = "update results, assignboard set results.deleted = 1 where results.candidateId=? and results.candidateId = assignboard.candidateId";
+        jdbcTemplate.update(query, candidateId);
+        return status >= 1;
     }
 
 }

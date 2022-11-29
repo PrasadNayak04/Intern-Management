@@ -1,6 +1,7 @@
 package com.robosoft.internmanagement.service.jwtSecurity;
 
 import com.robosoft.internmanagement.constants.AppConstants;
+import com.robosoft.internmanagement.exception.DatabaseException;
 import com.robosoft.internmanagement.exception.JwtTokenException;
 import com.robosoft.internmanagement.exception.ResponseData;
 import com.robosoft.internmanagement.service.MemberService;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -66,7 +68,6 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         }
         filterChain.doFilter(request, response);
-
     }
 
 }

@@ -13,6 +13,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +25,9 @@ public class AuthorityService implements AuthorityServices {
 
     @Autowired
     CandidateService candidateService;
+
+    @Autowired
+    MemberService memberService;
 
     private String query;
 
@@ -76,7 +80,10 @@ public class AuthorityService implements AuthorityServices {
         return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(Application.class));
     }
 
-    public ResponseData<String> assignRecruiter(AssignBoard assignBoard) {
+    public ResponseData<String> assignRecruiter(AssignBoard assignBoard, HttpServletRequest request) {
+        if(memberService.alreadyShortlisted(assignBoard.getCandidateId(), request))
+            return new ResponseData<>("FAILED", AppConstants.RECORD_ALREADY_EXIST);
+
         try {
             query = "select position from candidatesprofile where candidateId = ? and deleted = 0";
             String designation = jdbcTemplate.queryForObject(query, String.class, assignBoard.getCandidateId());
@@ -98,8 +105,8 @@ public class AuthorityService implements AuthorityServices {
 
     public void insertIntoAssignBoard(AssignBoard assignBoard) {
         try {
-            query = "insert into assignboard(candidateId,recruiterEmail) values(?,?)";
-            jdbcTemplate.update(query, assignBoard.getCandidateId(), assignBoard.getRecruiterEmail());
+            query = "insert into assignboard(candidateId,recruiterEmail, assignDate) values(?,?,?)";
+            jdbcTemplate.update(query, assignBoard.getCandidateId(), assignBoard.getRecruiterEmail(), LocalDate.now());
         } catch (Exception e1) {
             throw new DatabaseException(AppConstants.RECORD_ALREADY_EXIST);
         }

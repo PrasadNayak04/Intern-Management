@@ -40,8 +40,8 @@ public class AuthorityController {
     }
 
     @PostMapping(value = "/recruiter-assignation")
-    public ResponseEntity<?> setRecruiter(@RequestBody AssignBoard assignBoard) {
-        return ResponseEntity.ok().body(authorityServices.assignRecruiter(assignBoard));
+    public ResponseEntity<?> setRecruiter(@RequestBody AssignBoard assignBoard, HttpServletRequest request) {
+        return ResponseEntity.ok().body(authorityServices.assignRecruiter(assignBoard, request));
     }
 
 }

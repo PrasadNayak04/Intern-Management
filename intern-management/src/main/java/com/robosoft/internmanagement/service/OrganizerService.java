@@ -32,8 +32,13 @@ public class OrganizerService implements OrganizerServices
         if(!interviewAssigned(board))
             return new ResponseData<>("FAILED", AppConstants.INVALID_INFORMATION);
 
+        if(memberService.alreadyShortlisted(board.getCandidateId(), request))
+            return new ResponseData<>("FAILED", AppConstants.RECORD_ALREADY_EXIST);
+
         try{
             AssignBoardPage assignBoard = memberService.getAssignBoardPageDetails(board);
+            if(assignBoard == null)
+                throw new Exception("FAILED");
 
             if (!candidateService.isVacantPosition(assignBoard.getDesignation())){
                 return new ResponseData<>("FAILED", AppConstants.REQUIREMENTS_FAILED);
@@ -56,7 +61,6 @@ public class OrganizerService implements OrganizerServices
                         query = "update assignboard set status = ? where candidateId = ? and deleted = 0";
                         jdbcTemplate.update(query, board.getStatus(), board.getCandidateId());
 
-                        System.out.println(assignBoard.getCandidateId());
                         memberService.addToResults(assignBoard, "SHORTLISTED");
 
                         query = "update locations set vacancy = vacancy - 1 where designation = ? and location = 'ANY' and deleted = 0";

@@ -19,6 +19,7 @@ public interface RecruiterServices
     boolean reRecruitCandidate(int candidateId, HttpServletRequest request);
 
     boolean deleteCandidate(int candidateId, HttpServletRequest request);
+
     List<?> getAllOrganizers();
 
     List<?> getOrganizers(Integer limit, HttpServletRequest request);

@@ -73,17 +73,21 @@ public class RecruiterService implements RecruiterServices {
     public Summary getSummary(Date date, HttpServletRequest request) {
         String currentUser = memberService.getUserNameFromRequest(request);
         try {
+            if(date == null)
+                date = Date.valueOf(LocalDate.now());
+
             Summary summary = new Summary();
-            query = "select count(*) from assignboard where month(assignDate)=? and year(assignDate)= ? and status = ? and recruiterEmail=?";
+            query = "select count(*) from assignboard where month(interviewDate)=? and year(interviewDate)= ? and status = ? and recruiterEmail=?";
             int shortlisted = jdbcTemplate.queryForObject(query, Integer.class, date.toLocalDate().getMonthValue(), date.toLocalDate().getYear(), "SHORTLISTED", currentUser);
             summary.setShortlisted(shortlisted);
-            query = "select count(*) from assignboard where month(assignDate)=? and year(assignDate)=? and status=? and recruiterEmail=?";
+            query = "select count(*) from assignboard where month(organizerAssignDate)=? and year(organizerAssignDate)=? and status=? and recruiterEmail=?";
             int onHold = jdbcTemplate.queryForObject(query, Integer.class, date.toLocalDate().getMonthValue(), date.toLocalDate().getYear(), "NEW", currentUser);
-            summary.setOnHold(onHold);
-            query = "select count(*) from assignboard where month(assignDate)=? and year(assignDate)=? and status=? and recruiterEmail=?";
+            query = "select count(*) from assignboard where month(interviewDate)=? and year(interviewDate)=? and status=? and recruiterEmail=?";
             int rejected = jdbcTemplate.queryForObject(query, Integer.class, date.toLocalDate().getMonthValue(), date.toLocalDate().getYear(), "REJECTED", currentUser);
             summary.setRejected(rejected);
+            query = "select count(*) from assignboard where month(assignDate)=? and year(assignDate)=? and status=? and recruiterEmail=?";
             int assigned = jdbcTemplate.queryForObject(query, Integer.class, date.toLocalDate().getMonthValue(), date.toLocalDate().getYear(), "ASSIGNED", currentUser);
+            summary.setOnHold(onHold + assigned);
             int applications = shortlisted + onHold + rejected + assigned;
             summary.setApplications(applications);
             return summary;
@@ -321,12 +325,21 @@ public class RecruiterService implements RecruiterServices {
 
     public ResponseData assignOrganizer(AssignBoard assignBoard, HttpServletRequest request) {
         String currentUser = memberService.getUserNameFromRequest(request);
+
+        if(memberService.alreadyShortlisted(assignBoard.getCandidateId(), request))
+            return new ResponseData<>("FAILED", AppConstants.RECORD_ALREADY_EXIST);
+
         try {
             if (!candidateService.isVacantPosition(memberService.getAssignBoardPageDetails(assignBoard).getDesignation()))
                 return new ResponseData<>("FAILED", AppConstants.REQUIREMENTS_FAILED);
 
             if (organizerAssigned(assignBoard, currentUser))
                 return new ResponseData<>("FAILED", AppConstants.RECORD_ALREADY_EXIST);
+
+            query = "select ? < curdate()";
+            int validDate = jdbcTemplate.queryForObject(query, Integer.class, assignBoard.getInterviewDate());
+            if(validDate == 1)
+                return new ResponseData<>("FAILED", AppConstants.INVALID_INFORMATION);
 
             query = "Select count(*) from assignboard where candidateId = ? and recruiterEmail = ? and status = 'rejected' and deleted = 0";
             int count = jdbcTemplate.queryForObject(query, Integer.class, assignBoard.getCandidateId(), currentUser);
@@ -336,19 +349,16 @@ public class RecruiterService implements RecruiterServices {
                 query = "select candidateId from assignboard where recruiterEmail=? and candidateId=?";
                 jdbcTemplate.queryForObject(query, Integer.class, currentUser, assignBoard.getCandidateId());
                 try {
-                    query = "update assignboard set organizerEmail =?, assignDate=curDate(), status = 'NEW' where recruiterEmail=? and candidateId=?";
-                    jdbcTemplate.update(query, assignBoard.getOrganizerEmail(), currentUser, assignBoard.getCandidateId());
+                    query = "update assignboard set organizerEmail =?, organizerAssignDate=curDate(), interviewDate = ?, status = 'NEW' where recruiterEmail=? and candidateId=?";
+                    jdbcTemplate.update(query, assignBoard.getOrganizerEmail(), assignBoard.getInterviewDate(), currentUser, assignBoard.getCandidateId());
                     return new ResponseData<>("SUCCESS", AppConstants.SUCCESS);
                 } catch (Exception e) {
                     throw new DatabaseException(AppConstants.RECORD_NOT_EXIST);
                 }
             } else {
-                query = "update assignboard set status='NEW' where candidateId = ? and recruiterEmail = ? and status = 'REJECTED' and deleted = 0";
-                jdbcTemplate.update(query, assignBoard.getCandidateId(), currentUser);
-                return new ResponseData<>("SUCCESS", AppConstants.SUCCESS);
+                return new ResponseData<>("FAILED", AppConstants.INVALID_INFORMATION);
             }
         } catch (Exception e) {
-            e.printStackTrace();
             throw new DatabaseException(AppConstants.RECORD_NOT_EXIST);
         }
     }
@@ -360,13 +370,24 @@ public class RecruiterService implements RecruiterServices {
     }
 
     public boolean rejectAssignedCandidate(int candidateId, HttpServletRequest request) {
+
         String query = "update assignboard set status='REJECTED' where candidateId=? and recruiterEmail=? and status=? and deleted = 0";
         int status = jdbcTemplate.update(query, candidateId, memberService.getUserNameFromRequest(request), "ASSIGNED");
-        return status >= 1;
+
+        try {
+            query = "select candidateId, designation, location from applications where candidateId = ? and deleted = 0";
+            AssignBoardPage assignBoard = jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(AssignBoardPage.class), candidateId);
+            memberService.addToResults(assignBoard, "REJECTED");
+            return status >= 1;
+        } catch (Exception e) {
+            query = "update assignboard set status='ASSIGNED' where candidateId=? and recruiterEmail=? and status=? and deleted = 0";
+            jdbcTemplate.update(query, candidateId, memberService.getUserNameFromRequest(request), "REJECTED");
+            return false;
+        }
     }
 
     public boolean reRecruitCandidate(int candidateId, HttpServletRequest request) {
-        String query = "update assignboard set status='ASSIGNED', organizerEmail = null where candidateId=? and recruiterEmail=? and status=? and deleted = 0";
+        String query = "update assignboard set status='ASSIGNED', organizerEmail = null, organizerAssignDate = null, interviewDate = null where candidateId=? and recruiterEmail=? and status=? and deleted = 0";
         int status = jdbcTemplate.update(query, candidateId, memberService.getUserNameFromRequest(request), "REJECTED");
         return status >= 1;
     }
@@ -381,6 +402,7 @@ public class RecruiterService implements RecruiterServices {
         jdbcTemplate.update(query, candidateId, memberService.getUserNameFromRequest(request));
         return status >= 1;
     }
+
 
     public PageData<?>  getAssignBoardPage(int pageNo, int limit, HttpServletRequest request) {
         String currentUser = memberService.getUserNameFromRequest(request);

@@ -81,7 +81,7 @@ public class RecruiterController
     }
 
     @GetMapping("/summary")
-    public ResponseEntity<?> getSummary(@RequestParam Date date, HttpServletRequest request)
+    public ResponseEntity<?> getSummary(@RequestParam(required = false) Date date, HttpServletRequest request)
     {
         Summary summary = recruiterServices.getSummary(date, request);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(summary, AppConstants.SUCCESS));

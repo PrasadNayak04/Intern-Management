@@ -27,6 +27,8 @@ public interface MemberServices
 
     void rollbackEvent(int eventId);
 
+    boolean deleteExistingCandidate(int candidateId, HttpServletRequest request);
+
     boolean reactToEventInvite(int notificationId, String status, HttpServletRequest request);
 
     PageData<?> getNotifications(int pageNo, int limit, HttpServletRequest request);

@@ -15,7 +15,8 @@ import javax.validation.constraints.Pattern;
 @AllArgsConstructor
 public class MemberProfile{
 
-    @NotBlank(message = "Message")
+    @NotBlank
+    @Pattern(regexp = "[a-zA-Z]+")
     private String name;
 
     @NotBlank

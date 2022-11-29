@@ -11,7 +11,6 @@ import javax.validation.constraints.Email;
 @AllArgsConstructor
 public class Member {
 
-    @Email
     private String emailId;
     private String password;
     private String role;

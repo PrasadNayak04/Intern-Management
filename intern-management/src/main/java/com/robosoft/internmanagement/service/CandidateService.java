@@ -30,6 +30,9 @@ public class CandidateService implements CandidateServices
             return new ResponseData<>("FAILED", AppConstants.REQUIREMENTS_FAILED);
         }
 
+        if (alreadyShortlisted(candidateProfile.getEmailId()))
+            return new ResponseData<>("FAILED", AppConstants.RECORD_ALREADY_EXIST);
+
         int candidateId = 0;
         String photoRes = "", resumeRes = "";
 
@@ -77,15 +80,15 @@ public class CandidateService implements CandidateServices
             String insertToApplication = "insert into applications(candidateId,designation,location,date) values(?,?,?,?)";
             jdbcTemplate.update(insertToApplication,candidateId,candidateProfile.getPosition(),candidateProfile.getJobLocation(),date);
 
+            return new ResponseData<>("SUCCESS", AppConstants.SUCCESS);
+
         } catch (Exception e) {
             delCandidateQuery(candidateId);
             if (photoRes.equals("empty") || resumeRes.equals("empty") || photoRes.equals("") || resumeRes.equals(""))
                 throw new FileEmptyException(AppConstants.REQUIREMENTS_FAILED);
-            else if(photoRes.equals("") || resumeRes.equals(""))
+            else
                 return new ResponseData<>("FAILED", AppConstants.REQUIREMENTS_FAILED);
         }
-
-        return new ResponseData<>("SUCCESS", AppConstants.SUCCESS);
     }
 
     public int getCandidateId(String candidateEmail){
@@ -94,7 +97,6 @@ public class CandidateService implements CandidateServices
     }
 
     public void delCandidateQuery(int candidateId) {
-        System.out.println("deleting " + candidateId);
         String delQuery = "delete from candidatesprofile where candidateId = ?";
         jdbcTemplate.update(delQuery, candidateId);
     }
@@ -110,7 +112,6 @@ public class CandidateService implements CandidateServices
             }
             return false;
         } catch (Exception e) {
-            e.printStackTrace();
             return false;
         }
     }
@@ -126,7 +127,16 @@ public class CandidateService implements CandidateServices
             }
             return false;
         } catch (Exception e) {
-            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean alreadyShortlisted(String emailId){
+        String query ="select count(candidateId) from assignboard inner join candidatesprofile using(candidateId) where emailId = ? and status = 'SHORTLISTED' and assignboard.deleted = 0 and candidatesprofile.deleted = 0";
+        try{
+            int status =  jdbcTemplate.queryForObject(query, Integer.class, emailId);
+            return status > 0;
+        }catch (Exception e){
             return false;
         }
     }
