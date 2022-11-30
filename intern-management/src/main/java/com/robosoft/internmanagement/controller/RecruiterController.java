@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import java.sql.Date;
 import java.util.List;
 
@@ -55,7 +56,7 @@ public class RecruiterController
     }
 
     @PostMapping("/candidate-invitation")
-    public ResponseEntity<?> invite(@ModelAttribute CandidateInvite invitation, HttpServletRequest request)
+    public ResponseEntity<?> invite(@Valid @ModelAttribute CandidateInvite invitation, HttpServletRequest request)
     {
         boolean result = emailServices.sendInviteEmail(invitation, request);
         if (result)
@@ -218,7 +219,7 @@ public class RecruiterController
         if(invite == null){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData<>(null, AppConstants.RECORD_NOT_EXIST));
         }
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(invite, AppConstants.RECORD_NOT_EXIST));
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(invite, AppConstants.SUCCESS));
     }
 
     @GetMapping("/invites-by-day")
