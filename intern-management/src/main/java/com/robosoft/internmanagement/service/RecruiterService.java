@@ -481,7 +481,6 @@ public class RecruiterService implements RecruiterServices {
 
             return invite;
         } catch (Exception e) {
-            e.printStackTrace();
             return null;
         }
 

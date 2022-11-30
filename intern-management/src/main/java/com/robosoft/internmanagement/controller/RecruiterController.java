@@ -218,7 +218,7 @@ public class RecruiterController
         if(invite == null){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData<>(null, AppConstants.RECORD_NOT_EXIST));
         }
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(invite, AppConstants.RECORD_NOT_EXIST));
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(invite, AppConstants.SUCCESS));
     }
 
     @GetMapping("/invites-by-day")
