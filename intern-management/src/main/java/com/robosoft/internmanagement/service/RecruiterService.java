@@ -253,7 +253,6 @@ public class RecruiterService implements RecruiterServices {
             topTechnologies.add(0, technologies);
             return topTechnologies;
         } catch (Exception e) {
-            e.printStackTrace();
             return null;
         }
     }

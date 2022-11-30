@@ -64,7 +64,7 @@ public class MemberController {
     }
 
     @PostMapping("/event-creation")
-    public ResponseEntity<?> createEvent(@ModelAttribute Event event, HttpServletRequest request){
+    public ResponseEntity<?> createEvent(@RequestBody Event event, HttpServletRequest request){
         if(memberServices.createEvent(event, request)){
             return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseData<>("EVENT CREATION SUCCESSFUL", AppConstants.SUCCESS));
         }

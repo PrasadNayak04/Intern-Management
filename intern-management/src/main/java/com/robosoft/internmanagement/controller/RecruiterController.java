@@ -55,7 +55,7 @@ public class RecruiterController
     }
 
     @PostMapping("/candidate-invitation")
-    public ResponseEntity<?> invite(@ModelAttribute CandidateInvite invitation, HttpServletRequest request)
+    public ResponseEntity<?> invite(@RequestBody CandidateInvite invitation, HttpServletRequest request)
     {
         boolean result = emailServices.sendInviteEmail(invitation, request);
         if (result)
@@ -177,7 +177,7 @@ public class RecruiterController
     }
 
     @PutMapping("/organizer-assignation")
-    public ResponseEntity<?> setOrganizer(@ModelAttribute AssignBoard assignBoard, HttpServletRequest request)
+    public ResponseEntity<?> setOrganizer(@RequestBody AssignBoard assignBoard, HttpServletRequest request)
     {
         ResponseData result = recruiterServices.assignOrganizer(assignBoard, request);
         if(result.getResult().getOpinion().equals("F"))

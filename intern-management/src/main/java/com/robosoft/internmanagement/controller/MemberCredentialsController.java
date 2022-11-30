@@ -4,6 +4,7 @@ import com.robosoft.internmanagement.constants.AppConstants;
 import com.robosoft.internmanagement.exception.JwtTokenException;
 import com.robosoft.internmanagement.exception.ResponseData;
 import com.robosoft.internmanagement.modelAttributes.Member;
+import com.robosoft.internmanagement.modelAttributes.MemberCredentials;
 import com.robosoft.internmanagement.modelAttributes.MemberProfile;
 import com.robosoft.internmanagement.service.EmailServices;
 import com.robosoft.internmanagement.service.MemberServices;
@@ -42,12 +43,12 @@ public class MemberCredentialsController {
 
 
     @PostMapping(value = "/email-verification")
-    public ResponseEntity<?> verifyMail(@RequestParam String toEmail){
-        boolean mailSent = emailServices.sendRegistrationOtp(toEmail);
+    public ResponseEntity<?> verifyMail(@RequestBody MemberCredentials memberCredentials){
+        boolean mailSent = emailServices.sendRegistrationOtp(memberCredentials.getEmailId());
         if(mailSent){
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(memberServices.getMemberNameByEmail(toEmail) + " "  + toEmail, AppConstants.SUCCESS));
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(new MemberCredentials(memberCredentials.getName(), memberCredentials.getEmailId()), AppConstants.SUCCESS));
         }else{
-            return ResponseEntity.ok("false");
+            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(new ResponseData<>("INVALID INFORMATION", AppConstants.INVALID_INFORMATION));
         }
     }
 
@@ -73,30 +74,32 @@ public class MemberCredentialsController {
         } catch (BadCredentialsException e) {
             return ResponseEntity.badRequest().body(new ResponseData<>("LOGIN_FAILED", AppConstants.INVALID_INFORMATION));
         }catch (JwtTokenException jwtTokenException){
-            System.out.println("hi");
             return ResponseEntity.badRequest().body(new ResponseData<>(jwtTokenException.getMessage(), AppConstants.INVALID_INFORMATION));
         }
     }
 
     @PostMapping("/otp")
-    public ResponseEntity<?> sendMail(@RequestParam String toEmail){
-        boolean mailSent = emailServices.sendEmail(toEmail);
+    public ResponseEntity<?> sendMail(@RequestBody MemberCredentials memberCredentials){
+        boolean mailSent = emailServices.sendEmail(memberCredentials.getEmailId());
         if(mailSent){
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>("OTP SENT TO " + toEmail, AppConstants.SUCCESS));
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>("SUCCESSFUL", AppConstants.SUCCESS));
         }else{
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(new ResponseData<>("FAILED", AppConstants.TASK_FAILED));
         }
     }
 
     @PutMapping("/otp-verification")
-    public ResponseEntity<?> verify(@RequestParam String emailId,@RequestParam String otp)
+    public ResponseEntity<?> verify(@RequestBody MemberCredentials memberCredentials)
     {
-        String verificationStatus = emailServices.verification(emailId,otp);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(verificationStatus, AppConstants.SUCCESS));
+        String response = emailServices.verification(memberCredentials.getEmailId(), memberCredentials.getOtp());
+        if (response.equals("VERIFIED"))
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(new MemberCredentials(memberCredentials.getName(), memberCredentials.getEmailId()), AppConstants.SUCCESS));
+
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(new ResponseData<>(response, AppConstants.TASK_FAILED));
     }
 
     @PatchMapping("/password-update")
-    public ResponseEntity<?> updatePassword(@ModelAttribute Member member){
+    public ResponseEntity<?> updatePassword(@RequestBody Member member){
         int updateStatus = memberServices.updatePassword(member);
         if(updateStatus == 1)
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>("TASK SUCCESSFUL", AppConstants.SUCCESS));

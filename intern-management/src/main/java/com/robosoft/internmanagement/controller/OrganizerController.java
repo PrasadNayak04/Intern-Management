@@ -19,7 +19,7 @@ public class OrganizerController
     OrganizerServices organizerServices;
 
     @PutMapping("/interview")
-    public ResponseEntity<?> assignStatus(@ModelAttribute AssignBoard board, HttpServletRequest request)
+    public ResponseEntity<?> assignStatus(@RequestBody AssignBoard board, HttpServletRequest request)
     {
         ResponseData<?> result = organizerServices.takeInterview(board, request);
         if(result.getResult().getOpinion().equals("F"))
