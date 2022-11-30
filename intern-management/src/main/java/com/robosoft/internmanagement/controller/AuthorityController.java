@@ -24,7 +24,12 @@ public class AuthorityController {
 
     @PostMapping("/new-technology")
     public ResponseEntity<?> addNewTechnology(@RequestBody Technology technology, HttpServletRequest request) {
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body((authorityServices.addTechnology(technology, request)));
+        ResponseData<?> responseData = authorityServices.addTechnology(technology, request);
+
+        if (responseData.getResult().getOpinion().equals("T"))
+            return ResponseEntity.status(HttpStatus.ACCEPTED).body(responseData);
+
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(responseData);
     }
 
     @GetMapping("/available-recruiters")
@@ -41,7 +46,12 @@ public class AuthorityController {
 
     @PostMapping(value = "/recruiter-assignation")
     public ResponseEntity<?> setRecruiter(@RequestBody AssignBoard assignBoard, HttpServletRequest request) {
-        return ResponseEntity.ok().body(authorityServices.assignRecruiter(assignBoard, request));
+        ResponseData<?> responseData = authorityServices.assignRecruiter(assignBoard, request);
+
+        if (responseData.getResult().getOpinion().equals("T"))
+            return ResponseEntity.status(HttpStatus.ACCEPTED).body(responseData);
+
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(responseData);
     }
 
 }

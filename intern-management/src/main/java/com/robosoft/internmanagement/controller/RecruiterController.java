@@ -165,7 +165,7 @@ public class RecruiterController
         if(pageData == null)
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData<>(null, AppConstants.RECORD_NOT_EXIST));
 
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(pageData, AppConstants.RECORD_NOT_EXIST));
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(pageData, AppConstants.SUCCESS));
 
     }
 
@@ -200,7 +200,7 @@ public class RecruiterController
     public ResponseEntity<?> getCvPage(@RequestParam int pageNo, @RequestParam int limit, HttpServletRequest request)
     {
         if(!memberServices.validPageDetails(pageNo, limit)){
-            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Invalid page details");
+            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(new ResponseData<>("INVALID PAGE DETAILS", AppConstants.INVALID_INFORMATION));
         }
 
         PageData rejectedCvs = recruiterServices.getRejectedCvPage(pageNo, limit, request);

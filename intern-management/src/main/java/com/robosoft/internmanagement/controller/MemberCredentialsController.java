@@ -53,7 +53,11 @@ public class MemberCredentialsController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerMember(@Valid @ModelAttribute MemberProfile memberProfile, HttpServletRequest request){
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(memberServices.registerMember(memberProfile, request));
+        ResponseData<?> responseData = memberServices.registerMember(memberProfile, request);
+        if(responseData.getResult().getOpinion().equals("T"))
+            return ResponseEntity.status(HttpStatus.OK).body(responseData);
+
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(responseData);
     }
 
     @PostMapping(value = "/login")

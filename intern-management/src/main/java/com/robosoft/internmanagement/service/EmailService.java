@@ -102,8 +102,9 @@ public class EmailService implements EmailServices
             }
             catch (Exception e1)
             {
-                javaMailSender.send(mailMessage);
+                System.out.println("email");
                 insert(toEmail,OTP);
+                javaMailSender.send(mailMessage);
                 return true;
             }
         }
@@ -127,6 +128,7 @@ public class EmailService implements EmailServices
             jdbcTemplate.update("insert into forgotpasswords(emailId,otp) values (?,?)",emailId,code);
             return true;
         }catch (Exception e){
+            e.printStackTrace();
             return false;
         }
     }

@@ -91,7 +91,7 @@ public class MemberController {
             return null;
         }
 
-        String contentType = storageServices.getContentType(request, resource);
+        String contentType = storageServices.getContentType(request, resource, fileName);
 
         return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
