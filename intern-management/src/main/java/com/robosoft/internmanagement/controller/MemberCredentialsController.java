@@ -3,6 +3,7 @@ package com.robosoft.internmanagement.controller;
 import com.robosoft.internmanagement.constants.AppConstants;
 import com.robosoft.internmanagement.exception.JwtTokenException;
 import com.robosoft.internmanagement.exception.ResponseData;
+import com.robosoft.internmanagement.model.MemberModel;
 import com.robosoft.internmanagement.modelAttributes.Member;
 import com.robosoft.internmanagement.modelAttributes.MemberCredentials;
 import com.robosoft.internmanagement.modelAttributes.MemberProfile;
@@ -48,11 +49,11 @@ public class MemberCredentialsController {
         if(mailSent){
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(new MemberCredentials(memberCredentials.getName(), memberCredentials.getEmailId()), AppConstants.SUCCESS));
         }else{
-            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(new ResponseData<>("INVALID INFORMATION", AppConstants.INVALID_INFORMATION));
+            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(new ResponseData<>("INVALID INFORMATION", AppConstants.RECORD_ALREADY_EXIST));
         }
     }
 
-    @PostMapping("/register")
+    @PostMapping(value = "/register")
     public ResponseEntity<?> registerMember(@Valid @ModelAttribute MemberProfile memberProfile, HttpServletRequest request){
         ResponseData<?> responseData = memberServices.registerMember(memberProfile, request);
         if(responseData.getResult().getOpinion().equals("T"))
@@ -67,14 +68,22 @@ public class MemberCredentialsController {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(member.getEmailId(), member.getPassword()));
             final UserDetails userDetails = userDetailsService.loadUserByUsername(member.getEmailId());
             final String jwtToken = tokenManager.generateJwtToken(userDetails);
-            return ResponseEntity.ok(new ResponseData<>(jwtToken, AppConstants.SUCCESS));
-        } catch (DisabledException e) {
+            MemberModel memberModel = memberServices.createLoggedInMemberModel(member.getEmailId());
+            memberModel.setToken(jwtToken);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(memberModel, AppConstants.SUCCESS));
+        }
+        catch (DisabledException e) {
             e.printStackTrace();
             throw new Exception("USER_DISABLED", e);
-        } catch (BadCredentialsException e) {
+        }
+        catch (BadCredentialsException e) {
             return ResponseEntity.badRequest().body(new ResponseData<>("LOGIN_FAILED", AppConstants.INVALID_INFORMATION));
-        }catch (JwtTokenException jwtTokenException){
+        }
+        catch (JwtTokenException jwtTokenException){
             return ResponseEntity.badRequest().body(new ResponseData<>(jwtTokenException.getMessage(), AppConstants.INVALID_INFORMATION));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>("LOGIN FAILED", AppConstants.TASK_FAILED));
         }
     }
 

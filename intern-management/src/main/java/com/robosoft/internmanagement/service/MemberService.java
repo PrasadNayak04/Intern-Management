@@ -73,7 +73,8 @@ public class MemberService implements MemberServices
             query = "insert into membersprofile(name, emailId, photoUrl, mobileNumber, designation, position) values (?,?,?,?,?,?)";
             jdbcTemplate.update(query, memberProfile.getName(), memberProfile.getEmailId(), photoDownloadUrl, memberProfile.getMobileNumber(), memberProfile.getDesignation(), memberProfile.getPosition());
 
-            return new ResponseData("SUCCESS", AppConstants.SUCCESS);
+            MemberModel memberModel = createMemberModel(memberProfile, photoDownloadUrl);
+            return new ResponseData<>(memberModel, AppConstants.SUCCESS);
 
         } catch(Exception e){
             query = "delete from members where emailId = ? and deleted = 0";
@@ -81,6 +82,19 @@ public class MemberService implements MemberServices
             throw new DatabaseException(AppConstants.REQUIREMENTS_FAILED);
         }
 
+    }
+
+    public  MemberModel createMemberModel(MemberProfile memberProfile, String photoDownloadUrl){
+        return new MemberModel(memberProfile.getEmailId(), memberProfile.getName(), photoDownloadUrl, memberProfile.getMobileNumber(), memberProfile.getDesignation(), memberProfile.getPosition());
+    }
+
+    public MemberModel createLoggedInMemberModel(String emailId){
+        try{
+            String query = "select emailId, name, photoUrl, mobileNumber, designation, position from membersprofile where emailId = ? and deleted = 0";
+            return jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(MemberModel.class), emailId);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public int updatePassword(Member member){
@@ -315,6 +329,12 @@ public class MemberService implements MemberServices
         query = "update results, assignboard set results.deleted = 1 where results.candidateId=? and results.candidateId = assignboard.candidateId";
         jdbcTemplate.update(query, candidateId);
         return status >= 1;
+    }
+
+    public boolean removeNotification(int notificationId, HttpServletRequest request){
+        String query = "update notifications set deleted = 1 where notificationId = ? and emailId = ? and deleted = 0";
+        int count = jdbcTemplate.update(query, notificationId, getUserNameFromRequest(request));
+        return count > 0;
     }
 
 }

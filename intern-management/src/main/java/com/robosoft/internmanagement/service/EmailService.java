@@ -102,7 +102,6 @@ public class EmailService implements EmailServices
             }
             catch (Exception e1)
             {
-                System.out.println("email");
                 insert(toEmail,OTP);
                 javaMailSender.send(mailMessage);
                 return true;

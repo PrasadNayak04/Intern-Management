@@ -2,6 +2,7 @@ package com.robosoft.internmanagement.service;
 
 import com.robosoft.internmanagement.exception.ResponseData;
 import com.robosoft.internmanagement.model.LoggedProfile;
+import com.robosoft.internmanagement.model.MemberModel;
 import com.robosoft.internmanagement.model.NotificationDisplay;
 import com.robosoft.internmanagement.model.PageData;
 import com.robosoft.internmanagement.modelAttributes.Event;
@@ -16,6 +17,8 @@ public interface MemberServices
     Member getMemberByEmail(String memberEmail);
 
     ResponseData registerMember(MemberProfile memberProfile, HttpServletRequest request);
+
+    MemberModel createLoggedInMemberModel(String emailId);
 
     int updatePassword(Member member);
 
@@ -38,4 +41,6 @@ public interface MemberServices
     String getMemberNameByEmail(String email);
 
     boolean validPageDetails(int pageNo, Integer limit);
+
+    boolean removeNotification(int notificationId, HttpServletRequest request);
 }

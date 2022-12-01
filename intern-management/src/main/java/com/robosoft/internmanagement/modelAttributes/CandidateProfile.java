@@ -16,7 +16,7 @@ import java.util.List;
 public class CandidateProfile {
 
     @NotBlank
-    @Pattern(regexp = "[a-zA-Z]+")
+    @Pattern(regexp = "[a-zA-Z( )]+")
     private String name;
     private Date dob;
     @Min(value = 1000000000L)
