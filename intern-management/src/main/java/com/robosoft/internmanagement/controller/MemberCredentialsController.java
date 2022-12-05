@@ -42,7 +42,6 @@ public class MemberCredentialsController {
     @Autowired
     private EmailServices emailServices;
 
-
     @PostMapping(value = "/email-verification")
     public ResponseEntity<?> verifyMail(@RequestBody MemberCredentials memberCredentials){
         boolean mailSent = emailServices.sendRegistrationOtp(memberCredentials.getEmailId());
