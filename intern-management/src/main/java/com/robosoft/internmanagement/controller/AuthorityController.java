@@ -35,12 +35,16 @@ public class AuthorityController {
     @GetMapping("/available-recruiters")
     public ResponseEntity<?> getAllRecruiters() {
         List<MemberModel> memberModels = authorityServices.getAllRecruiters();
+        if(memberModels.size() == 0)
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(memberModels, AppConstants.NO_RESULT_SUCCESS));
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(memberModels, AppConstants.SUCCESS));
     }
 
     @GetMapping("/applicants")
     public ResponseEntity<?> allApplicants() {
         List<Application> applications = authorityServices.getApplicants();
+        if(applications.size() == 0)
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(applications, AppConstants.NO_RESULT_SUCCESS));
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(applications, AppConstants.SUCCESS));
     }
 

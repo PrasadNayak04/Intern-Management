@@ -4,6 +4,7 @@ import com.robosoft.internmanagement.exception.ResponseData;
 import com.robosoft.internmanagement.modelAttributes.AssignBoard;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 public interface OrganizerServices
 {
@@ -11,4 +12,5 @@ public interface OrganizerServices
 
     int getAnyLocationVacancy(String designation);
 
+    List<?> assignedCandidates(HttpServletRequest request);
 }

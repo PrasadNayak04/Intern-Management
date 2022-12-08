@@ -64,12 +64,14 @@ public class MemberCredentialsController {
     @PostMapping(value = "/login")
     public ResponseEntity<?> createToken(@RequestBody Member member, HttpServletRequest request) throws Exception {
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(member.getEmailId(), member.getPassword()));
-            final UserDetails userDetails = userDetailsService.loadUserByUsername(member.getEmailId());
-            final String jwtToken = tokenManager.generateJwtToken(userDetails);
             MemberModel memberModel = memberServices.createLoggedInMemberModel(member.getEmailId());
-            memberModel.setToken(jwtToken);
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(memberModel, AppConstants.SUCCESS));
+            if(memberModel.getPosition().equalsIgnoreCase(member.getRole())) {
+                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(member.getEmailId(), member.getPassword()));
+                final UserDetails userDetails = userDetailsService.loadUserByUsername(member.getEmailId());
+                final String jwtToken = tokenManager.generateJwtToken(userDetails);
+                memberModel.setToken(jwtToken);
+                return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(memberModel, AppConstants.SUCCESS));
+            }
         }
         catch (DisabledException e) {
             e.printStackTrace();
@@ -84,6 +86,8 @@ public class MemberCredentialsController {
         catch (Exception e) {
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>("LOGIN FAILED", AppConstants.TASK_FAILED));
         }
+
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>("LOGIN FAILED", AppConstants.TASK_FAILED));
     }
 
     @PostMapping("/otp")

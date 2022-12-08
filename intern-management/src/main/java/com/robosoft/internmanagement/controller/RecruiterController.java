@@ -18,7 +18,7 @@ import java.util.List;
 
 @CrossOrigin
 @RestController
-@RequestMapping(value = "/intern-management/recruiter" , produces = "application/json")
+@RequestMapping(value = "/intern-management/recruiter")
 public class RecruiterController
 {
     @Autowired
@@ -67,6 +67,8 @@ public class RecruiterController
     @GetMapping("/available-organizers")
     public ResponseEntity<?> getAllOrganizers(){
         List<?> organizers = recruiterServices.getAllOrganizers();
+        if(organizers.size() == 0)
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(organizers, AppConstants.NO_RESULT_SUCCESS));
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(organizers, AppConstants.SUCCESS));
     }
 
@@ -77,6 +79,8 @@ public class RecruiterController
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(new ResponseData<>("INVALID LIMIT", AppConstants.INVALID_INFORMATION));
         }
         List<?> organizers = recruiterServices.getOrganizers(limit, request);
+        if(organizers.size() == 0)
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(organizers, AppConstants.NO_RESULT_SUCCESS));
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(organizers, AppConstants.SUCCESS));
     }
 
@@ -103,6 +107,9 @@ public class RecruiterController
         PageData<?> CVAnalyses = recruiterServices.cvAnalysisPage(date, pageNo, limit);
         if(CVAnalyses == null)
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData<>(null, AppConstants.SUCCESS));
+
+        else if(CVAnalyses.getData().size() == 0)
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(CVAnalyses, AppConstants.NO_RESULT_SUCCESS));
 
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(CVAnalyses, AppConstants.SUCCESS));
 
@@ -165,6 +172,9 @@ public class RecruiterController
         if(pageData == null)
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData<>(null, AppConstants.RECORD_NOT_EXIST));
 
+        else if(pageData.getData().size() == 0)
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(pageData, AppConstants.NO_RESULT_SUCCESS));
+
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(pageData, AppConstants.SUCCESS));
 
     }
@@ -173,6 +183,9 @@ public class RecruiterController
     public ResponseEntity<?> getApplicants(HttpServletRequest request)
     {
         List<Application> applications = recruiterServices.getNotAssignedApplicants(request);
+        if(applications.size() == 0)
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(applications, AppConstants.NO_RESULT_SUCCESS));
+
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(applications, AppConstants.SUCCESS));
     }
 
@@ -193,7 +206,15 @@ public class RecruiterController
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(new ResponseData<>("INVALID PAGE DETAILS", AppConstants.INVALID_INFORMATION));
         }
         PageData<?> assignBoard = recruiterServices.getAssignBoardPage(pageNo, limit, request);
+
+        if(assignBoard == null)
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>("FAILED", AppConstants.TASK_FAILED));
+
+        else if(assignBoard.getData().size() == 0)
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(assignBoard, AppConstants.NO_RESULT_SUCCESS));
+
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(assignBoard, AppConstants.SUCCESS));
+
     }
 
     @GetMapping("/rejected-cv")
@@ -207,6 +228,9 @@ public class RecruiterController
         if(rejectedCvs == null){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData<>(null, AppConstants.RECORD_NOT_EXIST));
         }
+        else if(rejectedCvs.getData().size() == 0)
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(rejectedCvs, AppConstants.NO_RESULT_SUCCESS));
+
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(rejectedCvs, AppConstants.SUCCESS));
     }
 
@@ -228,6 +252,13 @@ public class RecruiterController
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(new ResponseData<>("INVALID PAGE DETAILS", AppConstants.INVALID_INFORMATION));
         }
         PageData<?> invites = recruiterServices.getByDay(date, pageNo, limit, request);
+
+        if(invites == null){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData<>(null, AppConstants.RECORD_NOT_EXIST));
+        }
+        else if(invites.getData().size() == 0)
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(invites, AppConstants.NO_RESULT_SUCCESS));
+
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(invites, AppConstants.SUCCESS));
     }
 
@@ -238,6 +269,12 @@ public class RecruiterController
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(new ResponseData<>("INVALID PAGE DETAILS", AppConstants.INVALID_INFORMATION));
         }
         PageData<?> invites = recruiterServices.getByMonth(date, pageNo, limit, request);
+        if(invites == null){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData<>(null, AppConstants.RECORD_NOT_EXIST));
+        }
+        else if(invites.getData().size() == 0)
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(invites, AppConstants.NO_RESULT_SUCCESS));
+
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(invites, AppConstants.SUCCESS));
     }
 
@@ -248,6 +285,12 @@ public class RecruiterController
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(new ResponseData<>("INVALID PAGE DETAILS", AppConstants.INVALID_INFORMATION));
         }
         PageData<?> invites = recruiterServices.getByYear(date, pageNo, limit, request);
+        if(invites == null){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData<>(null, AppConstants.RECORD_NOT_EXIST));
+        }
+        else if(invites.getData().size() == 0)
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(invites, AppConstants.NO_RESULT_SUCCESS));
+
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(invites, AppConstants.SUCCESS));
     }
 

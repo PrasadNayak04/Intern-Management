@@ -59,6 +59,10 @@ public class MemberController {
         PageData<?> pageData = memberServices.getNotifications(pageNo, limit, request);
         if(pageData == null)
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(new ResponseData<>(pageData, AppConstants.RECORD_NOT_EXIST));
+
+        else if(pageData.getData().size() == 0)
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(pageData, AppConstants.NO_RESULT_SUCCESS));
+
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseData<>(pageData, AppConstants.SUCCESS));
 
     }
