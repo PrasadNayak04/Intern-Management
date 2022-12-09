@@ -18,7 +18,5 @@ public class AssignBoard
     private Date assignDate;
     private Date interviewDate;
     private String status;
-    private boolean okWithOtherLocations;
-
 
 }

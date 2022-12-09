@@ -41,10 +41,8 @@ public class OrganizerService implements OrganizerServices
     }
 
     public ResponseData<?> takeInterview(AssignBoard board, HttpServletRequest request){
-        if(!(memberService.getUserNameFromRequest(request).equals(board.getOrganizerEmail())))
-            return new ResponseData<>("FAILED", AppConstants.INVALID_INFORMATION);
 
-        if(!interviewAssigned(board))
+        if(!interviewAssigned(board, request))
             return new ResponseData<>("FAILED", AppConstants.INVALID_INFORMATION);
 
         if(memberService.alreadyShortlisted(board.getCandidateId(), request))
@@ -120,15 +118,15 @@ public class OrganizerService implements OrganizerServices
         try {
             String query = "select vacancy from locations where designation = ? and location = 'ANY' and deleted = 0";
             return jdbcTemplate.queryForObject(query, Integer.class, designation);
-        } catch (DataAccessException e) {
+        } catch (Exception e) {
             return 0;
         }
     }
 
-    public boolean interviewAssigned(AssignBoard board){
+    public boolean interviewAssigned(AssignBoard board, HttpServletRequest request){
         try {
             String query = "select status from assignboard where candidateId=? and organizerEmail=? and status=? and deleted = 0";
-            jdbcTemplate.queryForObject(query, String.class, board.getCandidateId(), board.getOrganizerEmail(), "NEW");
+            jdbcTemplate.queryForObject(query, String.class, board.getCandidateId(), memberService.getUserNameFromRequest(request), "NEW");
             return true;
         } catch (Exception e) {
             return false;

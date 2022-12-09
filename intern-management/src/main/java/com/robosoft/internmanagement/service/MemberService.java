@@ -51,7 +51,6 @@ public class MemberService implements MemberServices
 
     public ResponseData registerMember(MemberProfile memberProfile, HttpServletRequest request){
 
-
         query = "select count(emailId) from membersprofile where emailId = ? and deleted = 0";
         int count = jdbcTemplate.queryForObject(query, Integer.class, memberProfile.getEmailId());
 
@@ -65,10 +64,10 @@ public class MemberService implements MemberServices
             query = "insert into members(emailId, password, role) values(?,?,?)";
             jdbcTemplate.update(query, memberProfile.getEmailId(), memberProfile.getPassword(), "ROLE_" + memberProfile.getPosition().toUpperCase());
 
-            String photoDownloadUrl = storageService.singleFileUpload(memberProfile.getPhoto(), memberProfile.getEmailId(), request, "MEMBER");
+            String photoDownloadUrl = storageService.singleFileUpload(memberProfile.getPhoto(), getMemberId(memberProfile.getEmailId()), request, "MEMBER");
 
             if (photoDownloadUrl.equals("empty"))
-                photoDownloadUrl = "http://localhost:8080/intern-management/member/fetch/default@gmail.com/default.png";
+                photoDownloadUrl = "http://localhost:8080/intern-management/member/fetch-member-photo/0/default.png";
 
             query = "insert into membersprofile(name, emailId, photoUrl, mobileNumber, designation, position) values (?,?,?,?,?,?)";
             jdbcTemplate.update(query, memberProfile.getName(), memberProfile.getEmailId(), photoDownloadUrl, memberProfile.getMobileNumber(), memberProfile.getDesignation(), memberProfile.getPosition());
@@ -82,6 +81,11 @@ public class MemberService implements MemberServices
             throw new DatabaseException(AppConstants.REQUIREMENTS_FAILED);
         }
 
+    }
+
+    public int getMemberId(String memberEmail){
+        String query = "select max(memberId) from members where emailId = ? and deleted = 0";
+        return jdbcTemplate.queryForObject(query, Integer.class, memberEmail);
     }
 
     public  MemberModel createMemberModel(MemberProfile memberProfile, String photoDownloadUrl){

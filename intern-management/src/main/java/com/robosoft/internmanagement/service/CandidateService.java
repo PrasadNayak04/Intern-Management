@@ -37,16 +37,18 @@ public class CandidateService implements CandidateServices
         String photoRes = "", resumeRes = "";
 
         try {
-            photoRes = storageService.singleFileUpload(candidateProfile.getPhoto(), candidateProfile.getEmailId(), request, "CANDIDATE");
-            resumeRes = storageService.singleFileUpload(candidateProfile.getAttachment(), candidateProfile.getEmailId(), request, "CANDIDATE");
-
-            if (photoRes.equals("empty") || resumeRes.equals("empty") || photoRes.equals("") || resumeRes.equals(""))
-                throw new Exception("File not found");
 
             String query1 = "insert into candidatesprofile(name,dob,mobileNumber,emailId,jobLocation,gender,position,expYear,expMonth,candidateType,contactPerson,languagesKnown,softwaresWorked,skills,about,currentCTC,expectedCTC) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
             jdbcTemplate.update(query1, candidateProfile.getName(), candidateProfile.getDob(), candidateProfile.getMobileNumber(), candidateProfile.getEmailId(), candidateProfile.getJobLocation(), candidateProfile.getGender(), candidateProfile.getPosition(), candidateProfile.getExpYear(), candidateProfile.getExpMonth(), candidateProfile.getCandidateType(), candidateProfile.getContactPerson(), candidateProfile.getLanguagesKnown(), candidateProfile.getSoftwareWorked(), candidateProfile.getSkills(), candidateProfile.getAbout(), candidateProfile.getCurrentCTC(), candidateProfile.getExpectedCTC());
 
             candidateId = getCandidateId(candidateProfile.getEmailId());
+
+            photoRes = storageService.singleFileUpload(candidateProfile.getPhoto(), candidateId, request, "CANDIDATE");
+            resumeRes = storageService.singleFileUpload(candidateProfile.getAttachment(), candidateId, request, "CANDIDATE");
+
+            System.out.println(photoRes + "photores");
+            if (photoRes.equals("empty") || resumeRes.equals("empty") || photoRes.equals("") || resumeRes.equals(""))
+                throw new Exception("File not found");
 
             String documentUrlQuery = "insert into documents(candidateId,attachmentUrl,imageUrl) values(?,?,?)";
             jdbcTemplate.update(documentUrlQuery, candidateId, resumeRes, photoRes);
@@ -83,6 +85,7 @@ public class CandidateService implements CandidateServices
             return new ResponseData<>("SUCCESS", AppConstants.SUCCESS);
 
         } catch (Exception e) {
+            e.printStackTrace();
             delCandidateQuery(candidateId);
             if (photoRes.equals("empty") || resumeRes.equals("empty") || photoRes.equals("") || resumeRes.equals(""))
                 throw new FileEmptyException(AppConstants.REQUIREMENTS_FAILED);

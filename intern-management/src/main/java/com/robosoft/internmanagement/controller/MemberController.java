@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 @RestController
 @CrossOrigin
@@ -86,6 +87,25 @@ public class MemberController {
     @GetMapping("/fetch/{folderName}/{fileName}")
     public ResponseEntity<?> getFile(@PathVariable String folderName, @PathVariable String fileName, HttpServletRequest request) throws IOException {
         final String filePath = "src\\main\\resources\\static\\documents\\" + folderName + "\\" + fileName;
+        Path path = Paths.get(filePath);
+        Resource resource;
+        try {
+            resource = new UrlResource(path.toUri());
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        String contentType = storageServices.getContentType(request, resource, fileName);
+
+        return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
+    }
+
+    @GetMapping("/fetch-member-photo/{folderName}/{fileName}")
+    public ResponseEntity<?> getMemberPhoto(@PathVariable String folderName, @PathVariable String fileName, HttpServletRequest request) throws IOException {
+        final String filePath = "src\\main\\resources\\static\\member-docs\\" + folderName + "\\" + fileName;
         Path path = Paths.get(filePath);
         Resource resource;
         try {

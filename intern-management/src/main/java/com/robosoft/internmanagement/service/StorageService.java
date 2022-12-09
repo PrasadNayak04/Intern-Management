@@ -15,43 +15,55 @@ import java.nio.file.Paths;
 public class StorageService implements StorageServices
 {
 
-    private static final String UPLOADED_FOLDER = "src\\main\\resources\\static\\documents\\";
+    private static final String UPLOADED_FOLDER = "src\\main\\resources\\static\\";
 
-    private final Path root = Paths.get("src\\main\\resources\\static\\documents\\");
+    private final Path root = Paths.get("src\\main\\resources\\static\\");
 
-    public String singleFileUpload(MultipartFile file, String email, HttpServletRequest request, String position) throws Exception {
+    public String singleFileUpload(MultipartFile file, int id, HttpServletRequest request, String position) throws Exception {
         String fileUrl = null;
+        String terminalFolder;
 
         try {
             if (file.isEmpty() && position.equalsIgnoreCase("MEMBER")) {
-                return "http://localhost:8080/intern-management/member/fetch/default@gmail.com/default.png";
+                return "http://localhost:8080/intern-management/member/fetch-member-photo/0/default.png";
             }
             else if (file.isEmpty() && position.equalsIgnoreCase("CANDIDATE")) {
                 return "empty";
             }
 
-            File newDirectory = new File(UPLOADED_FOLDER, email);
+            if(position.equalsIgnoreCase("MEMBER"))
+                terminalFolder = "member-docs\\";
+            else
+                terminalFolder = "documents\\";
+
+            File newDirectory = new File(UPLOADED_FOLDER + terminalFolder, String.valueOf(id));
             if(!(newDirectory.exists())){
                 newDirectory.mkdir();
             }
-            String CREATED_FOLDER = UPLOADED_FOLDER + email + "\\";
+
+            String CREATED_FOLDER = UPLOADED_FOLDER + terminalFolder + id + "\\";
             byte[] bytes = file.getBytes();
             Path path = Paths.get(CREATED_FOLDER  + file.getOriginalFilename());
             System.out.println(path);
             Files.write(path, bytes);
             String fileName = file.getOriginalFilename().replaceAll(" ","-" );
-            fileUrl = generateDocumentUrl(email + "/" + fileName);
+            fileUrl = generateDocumentUrl(id + "/" + fileName, position);
             System.out.println(fileUrl);
 
         } catch (Exception i) {
+            i.printStackTrace();
             return "empty";
         }
 
         return fileUrl;
     }
 
-    public String generateDocumentUrl(String fileName){
-        final String apiUrl = "http://localhost:8080/intern-management/member/fetch/";
+    public String generateDocumentUrl(String fileName, String position){
+        String apiUrl;
+        if(position.equalsIgnoreCase("CANDIDATE"))
+            apiUrl = "http://localhost:8080/intern-management/member/fetch/";
+        else
+            apiUrl = "http://localhost:8080/intern-management/member/fetch-member-photo/";
         return apiUrl + fileName;
     }
 
